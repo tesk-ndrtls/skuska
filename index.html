@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kapela App</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F0F0F;
+    --panel: #1A1A1A;
+    --panel2: #222222;
+    --border: #2E2E2E;
+    --accent: #F5C518;
+    --accent-dim: rgba(245,197,24,0.12);
+    --accent-hover: #FFD740;
+    --text: #E8E8E8;
+    --muted: #777;
+    --danger: #E05555;
+    --success: #4CAF7D;
+    --confirm: #4A9EE8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    background: rgba(15,15,15,0.95);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  nav { display: flex; gap: 4px; }
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover { color: var(--text); background: var(--panel); }
+  .nav-btn.active { color: var(--accent); background: var(--accent-dim); }
+
+  .user-area { display: flex; align-items: center; gap: 10px; }
+  .user-chip {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px 5px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+  .avatar {
+    width: 24px; height: 24px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 0.7rem;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* MAIN */
+  main { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+  }
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .section-sub { color: var(--muted); font-size: 0.83rem; margin-top: 4px; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: #444; }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(224,85,85,0.3); }
+  .btn-danger:hover { background: rgba(224,85,85,0.1); }
+  .btn-sm { padding: 5px 10px; font-size: 0.78rem; border-radius: 6px; }
+  .btn-icon { padding: 7px; border-radius: 7px; }
+
+  /* CARDS */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .card:hover { border-color: #3E3E3E; }
+
+  /* SESSION CARDS */
+  .session-grid { display: flex; flex-direction: column; gap: 12px; }
+  .session-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 90px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+  .session-card:hover { border-color: #3E3E3E; }
+  .session-card.confirmed { border-left: 3px solid var(--success); }
+  .session-card.proposed { border-left: 3px solid var(--accent); }
+  .session-card.cancelled { border-left: 3px solid var(--danger); opacity: 0.6; }
+
+  .session-date-block {
+    text-align: center;
+    background: var(--panel2);
+    border-radius: 8px;
+    padding: 10px 8px;
+  }
+  .session-day { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 800; line-height: 1; color: var(--accent); }
+  .session-month { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 2px; }
+
+  .session-info {}
+  .session-name { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 1rem; }
+  .session-meta { display: flex; gap: 12px; margin-top: 5px; flex-wrap: wrap; }
+  .session-tag {
+    font-size: 0.75rem; color: var(--muted);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .session-votes { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .vote-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700;
+    border: 2px solid var(--border);
+  }
+  .vote-dot.yes { background: rgba(76,175,125,0.2); border-color: var(--success); color: var(--success); }
+  .vote-dot.no { background: rgba(224,85,85,0.15); border-color: var(--danger); color: var(--danger); }
+  .vote-dot.maybe { background: rgba(245,197,24,0.15); border-color: var(--accent); color: var(--accent); }
+  .vote-dot.empty { background: var(--panel2); color: var(--muted); }
+
+  .session-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .status-badge {
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .badge-confirmed { background: rgba(76,175,125,0.15); color: var(--success); }
+  .badge-proposed { background: rgba(245,197,24,0.12); color: var(--accent); }
+  .badge-cancelled { background: rgba(224,85,85,0.12); color: var(--danger); }
+
+  /* MY VOTE BUTTONS */
+  .my-vote-row { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .vote-btn {
+    flex: 1; padding: 7px; border-radius: 7px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .vote-btn:hover { border-color: #444; color: var(--text); }
+  .vote-btn.active-yes { background: rgba(76,175,125,0.15); border-color: var(--success); color: var(--success); }
+  .vote-btn.active-no { background: rgba(224,85,85,0.1); border-color: var(--danger); color: var(--danger); }
+  .vote-btn.active-maybe { background: rgba(245,197,24,0.12); border-color: var(--accent); color: var(--accent); }
+
+  /* SESSION EXPAND */
+  .session-expand {
+    display: none;
+    padding: 0 20px 18px;
+    border-top: 1px solid var(--border);
+    margin-top: 0;
+  }
+  .session-expand.open { display: block; }
+  .setlist-section { margin-top: 14px; }
+  .setlist-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 8px; }
+  .setlist-items { display: flex; flex-wrap: wrap; gap: 6px; }
+  .setlist-pill {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 0.8rem; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .setlist-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .chord-strip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-top: 2px;
+    opacity: 0.7;
+  }
+
+  /* SONG LIBRARY */
+  .songs-toolbar {
+    display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
+  }
+  .search-input {
+    flex: 1; min-width: 180px;
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 14px;
+    border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.88rem;
+    outline: none; transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+  .filter-select {
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px;
+    border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.85rem;
+    outline: none; cursor: pointer;
+  }
+
+  .songs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .song-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .song-card:hover { border-color: #3E3E3E; transform: translateY(-1px); }
+
+  .song-card-header {
+    padding: 14px 16px 10px;
+  }
+  .song-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .song-artist { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+  .song-chord-strip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 6px 16px;
+    border-top: 1px solid rgba(245,197,24,0.1);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: 0.05em;
+  }
+  .song-card-footer {
+    padding: 8px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border);
+  }
+  .song-meta-tags { display: flex; gap: 6px; }
+  .tag {
+    font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+    background: var(--panel2); color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .tag.key { color: var(--accent); border-color: rgba(245,197,24,0.2); background: rgba(245,197,24,0.06); }
+
+  /* SONG DETAIL MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200; padding: 20px;
+    overflow-y: auto;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%; max-width: 700px;
+    margin-top: 40px;
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .modal-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.3rem; }
+  .modal-artist { color: var(--muted); font-size: 0.85rem; margin-top: 3px; }
+  .modal-close {
+    background: var(--panel2); border: 1px solid var(--border);
+    color: var(--muted); width: 30px; height: 30px;
+    border-radius: 6px; cursor: pointer; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+  }
+  .modal-tab {
+    padding: 12px 20px; cursor: pointer;
+    font-size: 0.85rem; font-weight: 600; color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .modal-tab:hover { color: var(--text); }
+  .modal-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .modal-body { padding: 20px 24px; }
+  .modal-tab-content { display: none; }
+  .modal-tab-content.active { display: block; }
+
+  /* CHORD SHEET */
+  .chordsheet {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    line-height: 1.9;
+    white-space: pre-wrap;
+    color: var(--text);
+  }
+  .chordsheet .chord-line {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .chordsheet .section-marker {
+    color: var(--confirm);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* LYRICS */
+  .lyrics-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    line-height: 2;
+    white-space: pre-wrap;
+    color: var(--text);
+  }
+  .lyrics-text .section-label {
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ADD SONG FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1/-1; }
+  label { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  input, textarea, select {
+    background: var(--panel2); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 12px;
+    border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.88rem;
+    outline: none; transition: border-color 0.15s; width: 100%;
+  }
+  textarea {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    resize: vertical;
+    min-height: 120px;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+
+  /* NEW SESSION MODAL */
+  .new-session-modal { max-width: 480px; }
+
+  /* CHORD HINT */
+  .chord-hint {
+    font-size: 0.73rem; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    margin-top: 4px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+  }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
+  .empty-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .empty-sub { font-size: 0.85rem; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px;
+    font-size: 0.85rem; font-weight: 500;
+    z-index: 500; transform: translateY(80px); opacity: 0;
+    transition: all 0.3s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 3px solid var(--success); }
+  .toast.error { border-left: 3px solid var(--danger); }
+
+  /* SUPABASE SETUP BANNER */
+  .setup-banner {
+    background: var(--accent-dim);
+    border: 1px solid rgba(245,197,24,0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .setup-banner-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+  .setup-banner-text { font-size: 0.84rem; color: var(--muted); line-height: 1.5; }
+  .setup-banner-text strong { color: var(--accent); }
+  .setup-banner-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px;
+    font-size: 0.78rem; color: var(--text);
+  }
+  .setup-banner input {
+    margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+  }
+  .setup-banner .btn { margin-top: 8px; }
+
+  /* MEMBERS */
+  .members-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .member-chip {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 12px 5px 5px;
+    font-size: 0.82rem;
+  }
+  .member-chip .avatar { width: 22px; height: 22px; font-size: 0.65rem; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .session-card { grid-template-columns: 70px 1fr; }
+    .session-actions { display: none; }
+    .songs-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    nav .nav-btn span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    <span id="bandNameDisplay">🎸 Kapela</span>
+  </div>
+  <nav>
+    <button class="nav-btn active" data-view="sessions" onclick="switchView('sessions',this)">📅 <span>Termíny</span></button>
+    <button class="nav-btn" data-view="songs" onclick="switchView('songs',this)">🎵 <span>Pesničky</span></button>
+  </nav>
+  <div class="user-area">
+    <div class="user-chip">
+      <div class="avatar" id="headerAvatar">?</div>
+      <span id="headerName">—</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===== SESSIONS VIEW ===== -->
+  <div class="view active" id="view-sessions">
+
+    <!-- Supabase setup banner -->
+    <div class="setup-banner" id="setupBanner">
+      <div class="setup-banner-icon">⚡</div>
+      <div class="setup-banner-text">
+        <strong>Nastav Supabase</strong> — vlož URL a anon key pre zdieľanie s kapelou.<br>
+        Vymaž <code>SUPABASE_URL</code> a <code>SUPABASE_KEY</code> v kóde, alebo zadaj nižšie:<br>
+        <input type="text" id="cfgUrl" placeholder="https://xxx.supabase.co" style="margin-top:8px">
+        <input type="text" id="cfgKey" placeholder="anon key" style="margin-top:6px">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-primary btn-sm" onclick="saveConfig()">Uložiť</button>
+          <button class="btn btn-ghost btn-sm" onclick="dismissBanner()">Neskôr (localStorage)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div>
+        <div class="section-title">Termíny skúšok</div>
+        <div class="section-sub" id="sessionSubtitle">Navrhni dátum, hlasuj, dohodňte sa</div>
+      </div>
+      <button class="btn btn-primary" onclick="openNewSession()">+ Nový termín</button>
+    </div>
+
+    <div class="session-grid" id="sessionGrid">
+      <!-- sessions rendered here -->
+    </div>
+    <div class="empty-state" id="sessionsEmpty" style="display:none">
+      <div class="empty-icon">📅</div>
+      <div class="empty-title">Zatiaľ žiadne termíny</div>
+      <div class="empty-sub">Navrhni prvú skúšku pre kapelu</div>
+    </div>
+  </div>
+
+  <!-- ===== SONGS VIEW ===== -->
+  <div class="view" id="view-songs">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Repertoár</div>
+        <div class="section-sub">Texty, akordy a noty — všetko na jednom mieste</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddSong()">+ Pridať pesničku</button>
+    </div>
+
+    <div class="songs-toolbar">
+      <input class="search-input" type="text" placeholder="Hľadaj pesničku alebo interpreta…" oninput="filterSongs(this.value)" id="songSearch">
+      <select class="filter-select" onchange="filterByTag(this.value)" id="tagFilter">
+        <option value="">Všetky</option>
+      </select>
+    </div>
+
+    <div class="songs-grid" id="songsGrid">
+      <!-- song cards rendered here -->
+    </div>
+    <div class="empty-state" id="songsEmpty" style="display:none">
+      <div class="empty-icon">🎵</div>
+      <div class="empty-title">Repertoár je prázdny</div>
+      <div class="empty-sub">Pridaj prvú pesničku s akordmi</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ===== SONG DETAIL MODAL ===== -->
+<div class="modal-overlay" id="songModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalSongTitle"></div>
+        <div class="modal-artist" id="modalSongArtist"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="editCurrentSong()">✏️ Editovať</button>
+        <button class="modal-close" onclick="closeSongModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" onclick="switchModalTab('chords',this)">Akordy</div>
+      <div class="modal-tab" onclick="switchModalTab('lyrics',this)">Text</div>
+      <div class="modal-tab" onclick="switchModalTab('info',this)">Info</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tab-content active" id="tab-chords">
+        <div class="chordsheet" id="chordsDisplay"></div>
+      </div>
+      <div class="modal-tab-content" id="tab-lyrics">
+        <div class="lyrics-text" id="lyricsDisplay"></div>
+      </div>
+      <div class="modal-tab-content" id="tab-info">
+        <div id="infoDisplay"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD/EDIT SONG MODAL ===== -->
+<div class="modal-overlay" id="addSongModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="addSongTitle">Pridať pesničku</div>
+      <button class="modal-close" onclick="closeAddSong()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Názov</label>
+          <input type="text" id="fTitle" placeholder="napr. Červená záclona">
+        </div>
+        <div class="form-group">
+          <label>Interpret</label>
+          <input type="text" id="fArtist" placeholder="napr. Horkýže Slíže">
+        </div>
+        <div class="form-group">
+          <label>Tónina</label>
+          <select id="fKey">
+            <option value="">—</option>
+            <option>Am</option><option>Dm</option><option>Em</option><option>Gm</option><option>Cm</option>
+            <option>A</option><option>D</option><option>E</option><option>G</option><option>C</option>
+            <option>F</option><option>B</option><option>Bb</option><option>F#m</option><option>C#m</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tempo (BPM)</label>
+          <input type="number" id="fBpm" placeholder="napr. 120" min="40" max="300">
+        </div>
+        <div class="form-group">
+          <label>Žáner / Tagy</label>
+          <input type="text" id="fTags" placeholder="rock, pomalá, obľúbená">
+        </div>
+        <div class="form-group">
+          <label>Capo</label>
+          <select id="fCapo">
+            <option value="0">Bez capo</option>
+            <option value="1">Capo 1</option><option value="2">Capo 2</option><option value="3">Capo 3</option>
+            <option value="4">Capo 4</option><option value="5">Capo 5</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Akordy (ChordPro alebo voľný formát)</label>
+          <textarea id="fChords" rows="8" placeholder="[Intro]&#10;Am  F  C  G&#10;&#10;[Sloha]&#10;Am          F&#10;Tu môžeš písať akordy nad text&#10;C               G&#10;alebo len samotné akordy"></textarea>
+          <div class="chord-hint">Tip: použij [Intro] [Sloha] [Refrén] [Outro] pre sekcie</div>
+        </div>
+        <div class="form-group full">
+          <label>Text piesne</label>
+          <textarea id="fLyrics" rows="8" placeholder="[Sloha 1]&#10;Tu napíš text piesne...&#10;&#10;[Refrén]&#10;..."></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Poznámky pre kapelu</label>
+          <textarea id="fNotes" rows="3" placeholder="Intro 2× repeat, na konci fade out, basák drží…"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
+        <button class="btn btn-ghost" onclick="closeAddSong()">Zrušiť</button>
+        <button class="btn btn-primary" onclick="saveSong()" id="saveSongBtn">Uložiť pesničku</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NEW SESSION MODAL ===== -->
+<div class="modal-overlay" id="newSessionModal">
+  <div class="modal new-session-modal">
+    <div class="modal-header">
+      <div class="modal-title" id="newSessionTitle">Navrhnúť termín</div>
+      <button class="modal-close" onclick="closeNewSession()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Dátum</label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="form-group">
+          <label>Čas</label>
+          <input type="time" id="fTime" value="19:00">
+        </div>
+        <div class="form-group full">
+          <label>Miesto</label>
+          <input type="text" id="fVenue" placeholder="napr. Skúšobňa Staré Mesto, Garage…">
+        </div>
+        <div class="form-group full">
+          <label>Poznámka</label>
+          <input type="text" id="fSessionNote" placeholder="napr. Focusneme sa na nové pesničky">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
+        <button class="btn btn-ghost" onclick="closeNewSession()">Zrušiť</button>
+        <button class="btn btn-primary" onclick="saveSession()">Navrhnúť termín</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NAME SETUP MODAL ===== -->
+<div class="modal-overlay open" id="nameModal">
+  <div class="modal new-session-modal">
+    <div class="modal-header">
+      <div class="modal-title">👋 Vitaj v kapele</div>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:16px">Zadaj svoje meno — ostatní uvidia tvoje hlasy a prítomnosť na skúškach.</p>
+      <div class="form-group">
+        <label>Meno / Prezývka</label>
+        <input type="text" id="fMyName" placeholder="napr. Jano, Miro, Speváčka…" autofocus>
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Názov kapely</label>
+        <input type="text" id="fBandName" placeholder="napr. The Neanderthals…">
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:18px">
+        <button class="btn btn-primary" onclick="saveName()">Začať hrať 🎸</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== CONFIG ====================
+let SUPABASE_URL = localStorage.getItem('sb_url') || 'https://vchxjbdrromujmzujduo.supabase.co';
+let SUPABASE_KEY = localStorage.getItem('sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjaHhqYmRycm9tdWptenVqZHVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NjAyNDAsImV4cCI6MjA5NjQzNjI0MH0.xGT8sxDD2bDogwCZGYAJ-sGWROt1c7e1M9f9_qrm2WA';
+
+// ==================== STATE ====================
+let myName = localStorage.getItem('bandMyName') || '';
+let bandName = localStorage.getItem('bandName') || 'Kapela';
+let sessions = JSON.parse(localStorage.getItem('bandSessions') || '[]');
+let songs = JSON.parse(localStorage.getItem('bandSongs') || '[]');
+let editingSongId = null;
+
+// ==================== INIT ====================
+function init() {
+  document.getElementById('setupBanner').style.display = 'none';
+  if (myName) {
+    document.getElementById('nameModal').classList.remove('open');
+    updateHeader();
+    loadFromSupabase();
+  }
+  updateBandName();
+  renderSessions();
+  renderSongs();
+  updateTagFilter();
+
+  // Pre-fill today date in new session
+  const today = new Date();
+  document.getElementById('fDate').value = today.toISOString().slice(0,10);
+}
+
+function saveName() {
+  const n = document.getElementById('fMyName').value.trim();
+  const b = document.getElementById('fBandName').value.trim();
+  if (!n) { showToast('Zadaj meno!', 'error'); return; }
+  myName = n;
+  bandName = b || 'Kapela';
+  localStorage.setItem('bandMyName', myName);
+  localStorage.setItem('bandName', bandName);
+  document.getElementById('nameModal').classList.remove('open');
+  updateHeader();
+  updateBandName();
+  showToast('Vitaj, ' + myName + '! 🎸', 'success');
+}
+
+function updateHeader() {
+  document.getElementById('headerName').textContent = myName;
+  document.getElementById('headerAvatar').textContent = myName.charAt(0).toUpperCase();
+}
+function updateBandName() {
+  document.getElementById('bandNameDisplay').textContent = '🎸 ' + bandName;
+}
+
+// ==================== VIEWS ====================
+function switchView(view, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ==================== SESSIONS ====================
+function renderSessions() {
+  const grid = document.getElementById('sessionGrid');
+  const empty = document.getElementById('sessionsEmpty');
+  if (!sessions.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  // Sort by date
+  const sorted = [...sessions].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+  grid.innerHTML = sorted.map(s => {
+    const d = new Date(s.date + 'T' + (s.time || '19:00'));
+    const day = d.getDate();
+    const month = d.toLocaleString('sk-SK', {month:'short'});
+    const status = s.status || 'proposed';
+    const votes = s.votes || {};
+
+    // Build vote dots for known members
+    const members = getKnownMembers();
+    const voteDots = members.slice(0,8).map(m => {
+      const v = votes[m];
+      const cl = v === 'yes' ? 'yes' : v === 'no' ? 'no' : v === 'maybe' ? 'maybe' : 'empty';
+      const ico = v === 'yes' ? '✓' : v === 'no' ? '✕' : v === 'maybe' ? '?' : m.charAt(0).toUpperCase();
+      return `<div class="vote-dot ${cl}" title="${m}: ${v || 'nehlasoval'}">${ico}</div>`;
+    }).join('');
+
+    const myVote = votes[myName] || '';
+
+    // Setlist pills
+    const setlistSongs = (s.setlist || []).map(sid => {
+      const song = songs.find(x => x.id === sid);
+      if (!song) return '';
+      return `<span class="setlist-pill" onclick="openSongById('${sid}');event.stopPropagation()">${song.title}</span>`;
+    }).join('');
+
+    return `
+    <div>
+      <div class="session-card ${status}" onclick="toggleExpand('exp-${s.id}')">
+        <div class="session-date-block">
+          <div class="session-day">${day}</div>
+          <div class="session-month">${month}</div>
+        </div>
+        <div class="session-info">
+          <div class="session-name">${s.venue || 'Skúšobňa'}</div>
+          <div class="session-meta">
+            <span class="session-tag">🕐 ${s.time || '19:00'}</span>
+            ${s.note ? `<span class="session-tag">📝 ${s.note}</span>` : ''}
+          </div>
+          <div class="session-votes">${voteDots}</div>
+        </div>
+        <div class="session-actions">
+          <span class="status-badge badge-${status}">${status === 'confirmed' ? '✓ Potvrdená' : status === 'cancelled' ? '✕ Zrušená' : '● Návrh'}</span>
+          <div style="display:flex;gap:6px">
+            ${status === 'proposed' ? `<button class="btn btn-ghost btn-sm" onclick="confirmSession('${s.id}');event.stopPropagation()">✓ Potvrdiť</button>` : ''}
+            <button class="btn btn-danger btn-sm" onclick="deleteSession('${s.id}');event.stopPropagation()">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="session-expand" id="exp-${s.id}">
+        <div class="my-vote-row">
+          <span style="font-size:0.78rem;color:var(--muted);margin-right:4px;align-self:center">Môžeš prísť?</span>
+          <button class="vote-btn ${myVote==='yes'?'active-yes':''}" onclick="vote('${s.id}','yes')">✓ Áno</button>
+          <button class="vote-btn ${myVote==='maybe'?'active-maybe':''}" onclick="vote('${s.id}','maybe')">? Možno</button>
+          <button class="vote-btn ${myVote==='no'?'active-no':''}" onclick="vote('${s.id}','no')">✕ Nie</button>
+        </div>
+        ${setlistSongs || songs.length ? `
+        <div class="setlist-section">
+          <div class="setlist-title">Setlist</div>
+          <div class="setlist-items">
+            ${setlistSongs}
+            <span class="setlist-pill" style="border-style:dashed;color:var(--muted)" onclick="openSetlistPicker('${s.id}');event.stopPropagation()">+ Pridať pesničku</span>
+          </div>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleExpand(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function getKnownMembers() {
+  const members = new Set([myName]);
+  sessions.forEach(s => {
+    if (s.votes) Object.keys(s.votes).forEach(m => members.add(m));
+  });
+  return [...members].filter(Boolean);
+}
+
+function vote(sessionId, val) {
+  const s = sessions.find(x => x.id === sessionId);
+  if (!s) return;
+  if (!s.votes) s.votes = {};
+  s.votes[myName] = val;
+  saveLocal();
+  renderSessions();
+  showToast('Hlas uložený 👍', 'success');
+  // Keep expand open
+  setTimeout(() => document.getElementById('exp-' + sessionId)?.classList.add('open'), 50);
+  syncToSupabase('sessions');
+}
+
+function confirmSession(id) {
+  const s = sessions.find(x => x.id === id);
+  if (s) { s.status = 'confirmed'; saveLocal(); renderSessions(); showToast('Skúška potvrdená ✓', 'success'); syncToSupabase('sessions'); }
+}
+function deleteSession(id) {
+  if (!confirm('Zmazať termín?')) return;
+  sessions = sessions.filter(x => x.id !== id);
+  saveLocal(); renderSessions(); showToast('Termín zmazaný', 'error');
+  syncToSupabase('sessions');
+}
+
+function openNewSession() { document.getElementById('newSessionModal').classList.add('open'); }
+function closeNewSession() { document.getElementById('newSessionModal').classList.remove('open'); }
+
+function saveSession() {
+  const date = document.getElementById('fDate').value;
+  const time = document.getElementById('fTime').value;
+  const venue = document.getElementById('fVenue').value.trim();
+  const note = document.getElementById('fSessionNote').value.trim();
+  if (!date) { showToast('Zadaj dátum!', 'error'); return; }
+  const s = { id: Date.now().toString(), date, time, venue: venue || 'Skúšobňa', note, status: 'proposed', votes: {}, setlist: [], createdBy: myName };
+  s.votes[myName] = 'yes';
+  sessions.push(s);
+  saveLocal(); renderSessions(); closeNewSession();
+  showToast('Termín navrhnutý! 📅', 'success');
+  syncToSupabase('sessions');
+}
+
+function openSetlistPicker(sessionId) {
+  const s = sessions.find(x => x.id === sessionId);
+  if (!s || !songs.length) { showToast('Najprv pridaj pesničky do repertoáru', 'error'); return; }
+  const current = s.setlist || [];
+  const available = songs.filter(sg => !current.includes(sg.id));
+  if (!available.length) { showToast('Všetky pesničky sú už v setliste', 'error'); return; }
+  const songName = prompt('Napíš časť názvu pesničky:\n' + songs.map((sg,i) => `${i+1}. ${sg.title} – ${sg.artist}`).join('\n'));
+  if (!songName) return;
+  const match = songs.find(sg => sg.title.toLowerCase().includes(songName.toLowerCase()));
+  if (!match) { showToast('Pesničku som nenašiel', 'error'); return; }
+  if (!s.setlist) s.setlist = [];
+  if (!s.setlist.includes(match.id)) {
+    s.setlist.push(match.id);
+    saveLocal(); renderSessions();
+    setTimeout(() => document.getElementById('exp-' + sessionId)?.classList.add('open'), 50);
+    showToast(match.title + ' pridaná do setlistu 🎵', 'success');
+    syncToSupabase('sessions');
+  }
+}
+
+// ==================== SONGS ====================
+function renderSongs(filter = '') {
+  const grid = document.getElementById('songsGrid');
+  const empty = document.getElementById('songsEmpty');
+  const tagFilter = document.getElementById('tagFilter').value;
+
+  let visible = songs;
+  if (filter) visible = visible.filter(s => s.title.toLowerCase().includes(filter.toLowerCase()) || (s.artist||'').toLowerCase().includes(filter.toLowerCase()));
+  if (tagFilter) visible = visible.filter(s => (s.tags||'').toLowerCase().includes(tagFilter.toLowerCase()));
+
+  if (!visible.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  grid.innerHTML = visible.map(s => {
+    const chordPreview = getChordStrip(s.chords || '');
+    const tags = (s.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+    return `
+    <div class="song-card" onclick="openSongById('${s.id}')">
+      <div class="song-card-header">
+        <div class="song-title">${s.title}</div>
+        <div class="song-artist">${s.artist || '—'}</div>
+      </div>
+      ${chordPreview ? `<div class="song-chord-strip">${chordPreview}</div>` : ''}
+      <div class="song-card-footer">
+        <div class="song-meta-tags">
+          ${s.key ? `<span class="tag key">${s.key}${s.capo > 0 ? ' / Capo '+s.capo : ''}</span>` : ''}
+          ${s.bpm ? `<span class="tag">♩ ${s.bpm}</span>` : ''}
+          ${tags.slice(0,2).map(t => `<span class="tag">${t}</span>`).join('')}
+        </div>
+        <span style="font-size:0.75rem;color:var(--muted)">→</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getChordStrip(chords) {
+  if (!chords) return '';
+  // Extract chord tokens (uppercase letters with optional modifiers)
+  const matches = chords.match(/\b[A-G][#b]?(?:m|maj|min|aug|dim|sus|add)?[0-9]?\b/g) || [];
+  const unique = [...new Set(matches)].slice(0, 12);
+  return unique.join('  ') || '';
+}
+
+function updateTagFilter() {
+  const sel = document.getElementById('tagFilter');
+  const allTags = new Set();
+  songs.forEach(s => (s.tags||'').split(',').map(t=>t.trim()).filter(Boolean).forEach(t => allTags.add(t)));
+  const existing = sel.innerHTML;
+  sel.innerHTML = '<option value="">Všetky</option>' + [...allTags].map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function filterSongs(val) { renderSongs(val); }
+function filterByTag() { renderSongs(document.getElementById('songSearch').value); }
+
+function openAddSong() {
+  editingSongId = null;
+  document.getElementById('addSongTitle').textContent = 'Pridať pesničku';
+  document.getElementById('saveSongBtn').textContent = 'Uložiť pesničku';
+  ['fTitle','fArtist','fChords','fLyrics','fNotes','fTags','fBpm'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fKey').value = '';
+  document.getElementById('fCapo').value = '0';
+  document.getElementById('addSongModal').classList.add('open');
+}
+function closeAddSong() { document.getElementById('addSongModal').classList.remove('open'); }
+
+function editCurrentSong() {
+  const id = document.querySelector('#songModal').dataset.songId;
+  const s = songs.find(x => x.id === id);
+  if (!s) return;
+  closeSongModal();
+  editingSongId = id;
+  document.getElementById('addSongTitle').textContent = 'Editovať pesničku';
+  document.getElementById('saveSongBtn').textContent = 'Uložiť zmeny';
+  document.getElementById('fTitle').value = s.title || '';
+  document.getElementById('fArtist').value = s.artist || '';
+  document.getElementById('fKey').value = s.key || '';
+  document.getElementById('fBpm').value = s.bpm || '';
+  document.getElementById('fTags').value = s.tags || '';
+  document.getElementById('fCapo').value = s.capo || '0';
+  document.getElementById('fChords').value = s.chords || '';
+  document.getElementById('fLyrics').value = s.lyrics || '';
+  document.getElementById('fNotes').value = s.notes || '';
+  document.getElementById('addSongModal').classList.add('open');
+}
+
+function saveSong() {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title) { showToast('Zadaj názov piesne!', 'error'); return; }
+  const data = {
+    title,
+    artist: document.getElementById('fArtist').value.trim(),
+    key: document.getElementById('fKey').value,
+    bpm: document.getElementById('fBpm').value,
+    tags: document.getElementById('fTags').value.trim(),
+    capo: parseInt(document.getElementById('fCapo').value) || 0,
+    chords: document.getElementById('fChords').value,
+    lyrics: document.getElementById('fLyrics').value,
+    notes: document.getElementById('fNotes').value.trim(),
+    updatedBy: myName,
+    updatedAt: new Date().toISOString()
+  };
+  if (editingSongId) {
+    const idx = songs.findIndex(x => x.id === editingSongId);
+    if (idx !== -1) songs[idx] = { ...songs[idx], ...data };
+    showToast('Pieseň aktualizovaná ✓', 'success');
+  } else {
+    data.id = Date.now().toString();
+    data.createdBy = myName;
+    songs.push(data);
+    showToast('Pieseň pridaná 🎵', 'success');
+  }
+  saveLocal(); renderSongs(); updateTagFilter(); closeAddSong();
+  syncToSupabase('songs');
+}
+
+function openSongById(id) {
+  const s = songs.find(x => x.id === id);
+  if (!s) return;
+  const modal = document.getElementById('songModal');
+  modal.dataset.songId = id;
+  document.getElementById('modalSongTitle').textContent = s.title;
+  document.getElementById('modalSongArtist').textContent = s.artist || '';
+
+  // Render chords with section highlighting
+  document.getElementById('chordsDisplay').innerHTML = renderChordSheet(s.chords || '(Žiadne akordy)');
+  document.getElementById('lyricsDisplay').innerHTML = renderLyrics(s.lyrics || '(Žiadny text)');
+
+  // Info tab
+  const infoParts = [];
+  if (s.key) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Tónina</span><div style="font-family:JetBrains Mono,monospace;color:var(--accent);font-size:1.2rem;font-weight:600;margin-top:3px">${s.key}${s.capo>0?' / Capo '+s.capo:''}</div></div>`);
+  if (s.bpm) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Tempo</span><div style="font-size:1.1rem;font-weight:600;margin-top:3px">♩ ${s.bpm} BPM</div></div>`);
+  if (s.tags) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Tagy</span><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${s.tags.split(',').map(t=>`<span class="tag">${t.trim()}</span>`).join('')}</div></div>`);
+  if (s.notes) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Poznámky</span><div style="margin-top:6px;font-size:0.88rem;line-height:1.6;color:var(--muted)">${s.notes}</div></div>`);
+  infoParts.push(`<div style="margin-top:16px;font-size:0.75rem;color:#444">Pridané: ${s.createdBy || '?'} · Upravené: ${s.updatedBy || '?'}</div>`);
+  document.getElementById('infoDisplay').innerHTML = infoParts.join('') || '<span style="color:var(--muted)">Žiadne info</span>';
+
+  // Reset to chords tab
+  document.querySelectorAll('.modal-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  document.querySelectorAll('.modal-tab-content').forEach((t,i) => t.classList.toggle('active', i===0));
+
+  modal.classList.add('open');
+}
+
+function closeSongModal() { document.getElementById('songModal').classList.remove('open'); }
+
+function renderChordSheet(text) {
+  return text.split('\n').map(line => {
+    if (/^\[(.*?)\]$/.test(line.trim())) {
+      return `<span class="section-marker">${escHtml(line)}</span>`;
+    }
+    // Chord line: mostly chord patterns
+    if (/^[\s]*([A-G][#b]?(?:m|maj|min|aug|dim|sus|add)?[0-9]?[\s/]?)+$/.test(line.trim()) && line.trim().length > 0) {
+      return `<span class="chord-line">${escHtml(line)}</span>`;
+    }
+    return escHtml(line);
+  }).join('\n');
+}
+
+function renderLyrics(text) {
+  return text.split('\n').map(line => {
+    if (/^\[(.*?)\]$/.test(line.trim())) {
+      return `<span class="section-label">${escHtml(line)}</span>`;
+    }
+    return escHtml(line);
+  }).join('\n');
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function switchModalTab(name, btn) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.modal-tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ==================== SUPABASE CONFIG ====================
+function saveConfig() {
+  const url = document.getElementById('cfgUrl').value.trim();
+  const key = document.getElementById('cfgKey').value.trim();
+  if (!url || !key) { showToast('Zadaj URL aj Key!', 'error'); return; }
+  SUPABASE_URL = url; SUPABASE_KEY = key;
+  localStorage.setItem('sb_url', url);
+  localStorage.setItem('sb_key', key);
+  document.getElementById('setupBanner').style.display = 'none';
+  showToast('Supabase pripojený ✓', 'success');
+  loadFromSupabase();
+}
+
+function dismissBanner() {
+  document.getElementById('setupBanner').style.display = 'none';
+}
+
+// ==================== SUPABASE SYNC ====================
+async function sbFetch(path, method = 'GET', body = null) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=minimal' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+    if (!res.ok) return null;
+    if (method === 'GET') return await res.json();
+    return true;
+  } catch { return null; }
+}
+
+async function loadFromSupabase() {
+  const [sbSessions, sbSongs] = await Promise.all([
+    sbFetch('band_sessions?select=*&order=date.asc'),
+    sbFetch('band_songs?select=*&order=title.asc')
+  ]);
+  if (sbSessions) { sessions = sbSessions; saveLocal(); renderSessions(); }
+  if (sbSongs) { songs = sbSongs; saveLocal(); renderSongs(); updateTagFilter(); }
+}
+
+async function syncToSupabase(table) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return;
+  const data = table === 'sessions' ? sessions : songs;
+  const t = table === 'sessions' ? 'band_sessions' : 'band_songs';
+  // Upsert
+  await sbFetch(t + '?on_conflict=id', 'POST', data);
+}
+
+// ==================== LOCAL STORAGE ====================
+function saveLocal() {
+  localStorage.setItem('bandSessions', JSON.stringify(sessions));
+  localStorage.setItem('bandSongs', JSON.stringify(songs));
+}
+
+// ==================== TOAST ====================
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Init
+init();
+</script>
+</body>
+</html>
