@@ -15,8 +15,8 @@
     --accent: #F5C518;
     --accent-dim: rgba(245,197,24,0.12);
     --accent-hover: #FFD740;
-    --text: #E8E8E8;
-    --muted: #777;
+    --text: #F2F2F2;
+    --muted: #999;
     --danger: #E05555;
     --success: #4CAF7D;
     --confirm: #4A9EE8;
@@ -27,6 +27,7 @@
     color: var(--text);
     font-family: 'Special Elite', 'JetBrains Mono', monospace;
     min-height: 100vh;
+    font-size: 17px;
   }
 
   /* HEADER */
@@ -61,9 +62,9 @@
     border: none;
     color: var(--muted);
     font-family: 'Special Elite', 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 500;
-    padding: 6px 14px;
+    padding: 7px 16px;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s;
@@ -111,7 +112,7 @@
   }
   .section-title {
     font-family: 'Special Elite', monospace;
-    font-size: 1.6rem;
+    font-size: 1.75rem;
     font-weight: 700;
     letter-spacing: -0.03em;
     line-height: 1;
@@ -175,14 +176,14 @@
     border-radius: 8px;
     padding: 10px 8px;
   }
-  .session-day { font-family: 'Special Elite', monospace; font-size: 2.4rem; font-weight: 800; line-height: 1; color: var(--accent); }
-  .session-month { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 2px; }
+  .session-day { font-family: 'Special Elite', monospace; font-size: 2.8rem; font-weight: 800; line-height: 1; color: var(--accent); }
+  .session-month { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); margin-top: 2px; }
 
   .session-info {}
-  .session-name { font-family: 'Special Elite', monospace; font-weight: 600; font-size: 1rem; }
+  .session-name { font-family: 'Special Elite', monospace; font-weight: 600; font-size: 1.15rem; color: #fff; }
   .session-meta { display: flex; gap: 12px; margin-top: 5px; flex-wrap: wrap; }
   .session-tag {
-    font-size: 0.75rem; color: var(--muted);
+    font-size: 0.82rem; color: #bbb;
     display: flex; align-items: center; gap: 4px;
   }
   .session-votes { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
@@ -199,7 +200,7 @@
   /* Vote chips with full names */
   .session-votes { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
   .vote-chip {
-    font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 12px;
+    font-size: 0.8rem; font-weight: 600; padding: 3px 10px; border-radius: 12px;
     border: 1px solid var(--border); background: var(--panel2); color: var(--muted);
   }
   .vote-chip.yes { background: rgba(76,175,125,0.15); border-color: var(--success); color: var(--success); }
@@ -209,8 +210,8 @@
 
   .session-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
   .status-badge {
-    font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
-    padding: 3px 8px; border-radius: 4px;
+    font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 4px 10px; border-radius: 4px;
   }
   .badge-confirmed { background: rgba(76,175,125,0.15); color: var(--success); }
   .badge-proposed { background: rgba(245,197,24,0.12); color: var(--accent); }
@@ -296,7 +297,7 @@
   }
   .song-title {
     font-family: 'Special Elite', monospace;
-    font-weight: 700; font-size: 1rem;
+    font-weight: 700; font-size: 1.1rem;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .song-artist { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
@@ -355,7 +356,7 @@
     display: flex; justify-content: space-between; align-items: flex-start;
     flex-shrink: 0;
   }
-  .modal-title { font-family: 'Special Elite', monospace; font-weight: 700; font-size: 1.3rem; }
+  .modal-title { font-family: 'Special Elite', monospace; font-weight: 700; font-size: 1.4rem; }
   .modal-artist { color: var(--muted); font-size: 0.85rem; margin-top: 3px; }
   .modal-close {
     background: var(--panel2); border: 1px solid var(--border);
@@ -386,39 +387,82 @@
   .modal-tab-content.active { display: block; }
 
   /* CHORD SHEET */
+  /* CHORD SHEET - inline chords above lyrics */
   .chordsheet {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.88rem;
-    line-height: 1.9;
-    white-space: pre-wrap;
+    font-size: 1rem;
+    line-height: 1.5;
     color: var(--text);
+    user-select: text;
   }
-  .chordsheet .chord-line {
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .chordsheet .section-marker {
+  .cs-section {
+    display: block;
     color: var(--confirm);
     font-size: 0.78rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
+    margin: 18px 0 6px;
+    padding: 2px 8px;
+    background: rgba(74,158,232,0.1);
+    border-left: 3px solid var(--confirm);
+    border-radius: 0 4px 4px 0;
   }
+  .cs-section:first-child { margin-top: 0; }
+  .cs-line {
+    display: block;
+    position: relative;
+    padding-top: 1.4em;
+    margin-bottom: 2px;
+    white-space: pre;
+  }
+  .cs-line-lyrics {
+    display: block;
+    font-size: 1rem;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .cs-line-chords {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.2;
+    white-space: pre;
+    pointer-events: none;
+  }
+  /* Chord-only lines (no lyrics below) */
+  .cs-chord-only {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .cs-empty { display: block; height: 0.6em; }
 
   /* LYRICS */
   .lyrics-text {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.88rem;
+    font-size: 1rem;
     line-height: 2;
     white-space: pre-wrap;
     color: var(--text);
   }
   .lyrics-text .section-label {
     color: var(--accent);
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.78rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    background: rgba(245,197,24,0.08);
+    padding: 1px 6px;
+    border-radius: 3px;
   }
 
   /* ADD SONG FORM */
@@ -573,7 +617,7 @@
   </div>
   <nav>
     <button class="nav-btn active" data-view="sessions" onclick="switchView('sessions',this)">📅 <span>Termíny</span></button>
-    <button class="nav-btn" data-view="songs" onclick="switchView('songs',this)">🎵 <span>Pesničky</span></button>
+    <button class="nav-btn" data-view="songs" onclick="switchView('songs',this)">🎵 <span>Naše hity</span></button>
     <button class="nav-btn" data-view="chat" onclick="switchView('chat',this)">💬 <span>Chat</span></button>
   </nav>
   <div class="user-area">
@@ -627,8 +671,8 @@
   <div class="view" id="view-songs">
     <div class="section-header">
       <div>
-        <div class="section-title">Repertoár</div>
-        <div class="section-sub">Texty, akordy a noty — všetko na jednom mieste</div>
+        <div class="section-title">Naše hity</div>
+        <div class="section-sub">Texty a akordy pre kapelu</div>
       </div>
       <button class="btn btn-primary" onclick="openAddSong()">+ Pridať pesničku</button>
     </div>
@@ -645,7 +689,7 @@
     </div>
     <div class="empty-state" id="songsEmpty" style="display:none">
       <div class="empty-icon">🎵</div>
-      <div class="empty-title">Repertoár je prázdny</div>
+      <div class="empty-title">Žiadne hity zatiaľ</div>
       <div class="empty-sub">Pridaj prvú pesničku s akordmi</div>
     </div>
   </div>
@@ -680,8 +724,9 @@
         <div class="modal-title" id="modalSongTitle"></div>
         <div class="modal-artist" id="modalSongArtist"></div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-ghost btn-sm" onclick="editCurrentSong()">✏️ Editovať</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" id="autoscrollBtn" onclick="toggleAutoscroll()">▶ Autoscroll</button>
+        <button class="btn btn-ghost btn-sm" onclick="editCurrentSong()">✏️</button>
         <button class="modal-close" onclick="closeSongModal()">✕</button>
       </div>
     </div>
@@ -690,7 +735,12 @@
       <div class="modal-tab" onclick="switchModalTab('lyrics',this)">Text</div>
       <div class="modal-tab" onclick="switchModalTab('info',this)">Info</div>
     </div>
-    <div class="modal-body">
+    <div id="autoscrollBar" style="display:none;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--panel2);flex-shrink:0;align-items:center;gap:10px">
+      <span style="font-size:0.78rem;color:var(--muted)">Rýchlosť</span>
+      <input type="range" id="scrollSpeed" min="1" max="10" value="3" style="flex:1;accent-color:var(--accent);width:auto;padding:0;height:20px;background:transparent;border:none">
+      <span style="font-size:0.78rem;color:var(--accent)" id="scrollSpeedLabel">3</span>
+    </div>
+    <div class="modal-body" id="songModalBody">
       <div class="modal-tab-content active" id="tab-chords">
         <div class="chordsheet" id="chordsDisplay"></div>
       </div>
@@ -752,7 +802,7 @@
             <button type="button" class="btn btn-ghost btn-sm" onclick="searchUG()" style="font-size:0.72rem;padding:3px 9px;margin-left:8px">🔍 Hľadaj na UG</button>
           </label>
           <textarea id="fChords" rows="8" placeholder="[Intro]&#10;Am  F  C  G&#10;&#10;[Sloha]&#10;Am          F&#10;Tu môžeš písať akordy nad text&#10;C               G&#10;alebo len samotné akordy"></textarea>
-          <div class="chord-hint">Tip: použij [Intro] [Sloha] [Refrén] [Outro] pre sekcie</div>
+          <div class="chord-hint">Formát: striedaj riadok akordov a riadok textu. Sekcie: [Intro] [Sloha] [Refrén] [Outro]. Akordy sa automaticky zobrazia nad textom.</div>
         </div>
         <div class="form-group full">
           <label>Text piesne</label>
@@ -1302,19 +1352,116 @@ function openSongById(id) {
   modal.classList.add('open');
 }
 
-function closeSongModal() { document.getElementById('songModal').classList.remove('open'); }
+function closeSongModal() { stopAutoscroll(); document.getElementById('songModal').classList.remove('open'); }
 
-function renderChordSheet(text) {
-  return text.split('\n').map(line => {
-    if (/^\[(.*?)\]$/.test(line.trim())) {
-      return `<span class="section-marker">${escHtml(line)}</span>`;
+function isChordLine(line) {
+  const t = line.trim();
+  if (!t) return false;
+  // Must contain at least one chord token
+  if (!/[A-G][#b]?/.test(t)) return false;
+  // Remove all valid chord tokens and separators; what remains should be mostly whitespace
+  const stripped = t.replace(/[A-G][#b]?(?:maj|min|m|aug|dim|sus[24]?|add)?[0-9]?(?:\/[A-G][#b]?)?/g, '').replace(/[\s\-|\/]/g,'');
+  return stripped.length <= 2;
+}
+
+
+// ==================== AUTOSCROLL ====================
+let scrollInterval = null;
+let isScrolling = false;
+
+function toggleAutoscroll() {
+  const btn = document.getElementById('autoscrollBtn');
+  const bar = document.getElementById('autoscrollBar');
+  const body = document.getElementById('songModalBody');
+  if (isScrolling) {
+    stopAutoscroll();
+  } else {
+    isScrolling = true;
+    btn.textContent = '⏸ Stop';
+    btn.style.background = 'var(--accent-dim)';
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.color = 'var(--accent)';
+    bar.style.display = 'flex';
+    startAutoscroll();
+  }
+}
+
+function startAutoscroll() {
+  const speedEl = document.getElementById('scrollSpeed');
+  const labelEl = document.getElementById('scrollSpeedLabel');
+  speedEl.oninput = () => {
+    labelEl.textContent = speedEl.value;
+    if (isScrolling) { clearInterval(scrollInterval); scrollInterval = setInterval(doScroll, 50); }
+  };
+  scrollInterval = setInterval(doScroll, 50);
+}
+
+function doScroll() {
+  const body = document.getElementById('songModalBody');
+  if (!body) return;
+  const speed = parseInt(document.getElementById('scrollSpeed').value);
+  body.scrollTop += speed * 0.5;
+  // Stop at bottom
+  if (body.scrollTop + body.clientHeight >= body.scrollHeight - 10) {
+    stopAutoscroll();
+  }
+}
+
+function stopAutoscroll() {
+  clearInterval(scrollInterval);
+  isScrolling = false;
+  const btn = document.getElementById('autoscrollBtn');
+  const bar = document.getElementById('autoscrollBar');
+  if (btn) { btn.textContent = '▶ Autoscroll'; btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = ''; }
+  if (bar) bar.style.display = 'none';
+}
+
+function renderChordSheet(rawText) {
+  if (!rawText || rawText === '(Žiadne akordy)') return '<span style="color:var(--muted);font-style:italic">Žiadne akordy</span>';
+  
+  const lines = rawText.split('\n');
+  let html = '';
+  let i = 0;
+  
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // Section marker [Intro], [Sloha], etc.
+    if (/^\[.+\]$/.test(trimmed)) {
+      html += `<span class="cs-section">${escHtml(trimmed)}</span>`;
+      i++;
+      continue;
     }
-    // Chord line: mostly chord patterns
-    if (/^[\s]*([A-G][#b]?(?:m|maj|min|aug|dim|sus|add)?[0-9]?[\s/]?)+$/.test(line.trim()) && line.trim().length > 0) {
-      return `<span class="chord-line">${escHtml(line)}</span>`;
+    
+    // Empty line
+    if (!trimmed) {
+      html += '<span class="cs-empty"></span>';
+      i++;
+      continue;
     }
-    return escHtml(line);
-  }).join('\n');
+    
+    // Chord line - check if next line is lyrics
+    if (isChordLine(line)) {
+      const nextLine = lines[i + 1];
+      if (nextLine !== undefined && nextLine.trim() && !isChordLine(nextLine) && !/^\[.+\]$/.test(nextLine.trim())) {
+        // Paired: chord line above, lyrics below
+        html += `<span class="cs-line"><span class="cs-line-chords">${escHtml(line)}</span><span class="cs-line-lyrics">${escHtml(nextLine)}</span></span>`;
+        i += 2;
+      } else {
+        // Chord-only line (no lyrics follow)
+        html += `<span class="cs-chord-only">${escHtml(line)}</span>`;
+        i++;
+      }
+      continue;
+    }
+    
+    // Pure lyrics line
+    html += `<span class="cs-line-lyrics" style="display:block;margin-bottom:2px">${escHtml(line)}</span>`;
+    i++;
+  }
+  
+  return html;
 }
 
 function renderLyrics(text) {
