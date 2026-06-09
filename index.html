@@ -327,10 +327,11 @@
   .modal-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.75);
-    z-index: 200; padding: 20px;
+    z-index: 200; padding: 12px;
     overflow-y: auto;
     justify-content: center;
     align-items: flex-start;
+    -webkit-overflow-scrolling: touch;
   }
   .modal-overlay.open { display: flex; }
   .modal {
@@ -338,13 +339,21 @@
     border: 1px solid var(--border);
     border-radius: 16px;
     width: 100%; max-width: 700px;
-    margin-top: 40px;
+    margin: 40px 0;
+    max-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+  }
+  .modal-body {
+    overflow-y: auto;
+    flex: 1;
   }
   .modal-header {
     padding: 20px 24px;
     border-bottom: 1px solid var(--border);
     display: flex; justify-content: space-between; align-items: flex-start;
+    flex-shrink: 0;
   }
   .modal-title { font-family: 'Special Elite', monospace; font-weight: 700; font-size: 1.3rem; }
   .modal-artist { color: var(--muted); font-size: 0.85rem; margin-top: 3px; }
@@ -360,6 +369,7 @@
 
   .modal-tabs {
     display: flex; border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
   .modal-tab {
     padding: 12px 20px; cursor: pointer;
@@ -549,7 +559,7 @@
     nav .nav-btn span { display: none; }
     .logo { font-size: 1.8rem !important; }
     .section-title { font-size: 1.2rem; }
-    .modal { margin-top: 10px; }
+    .modal { margin: 8px 0; max-height: calc(100vh - 16px); }
     .chat-wrap { height: calc(100vh - 200px); }
     .vote-chip { font-size: 0.68rem; padding: 2px 6px; }
   }
@@ -779,6 +789,10 @@
           <input type="time" id="fTime" value="19:00">
         </div>
         <div class="form-group full">
+          <label>Názov</label>
+          <input type="text" id="fName" placeholder="napr. Skúška pred koncertom">
+        </div>
+        <div class="form-group full">
           <label>Miesto</label>
           <input type="text" id="fVenue" placeholder="napr. Skúšobňa Staré Mesto, Garage…">
         </div>
@@ -806,6 +820,10 @@
     <div class="modal-body">
       <input type="hidden" id="fEditSessionId">
       <div class="form-grid">
+        <div class="form-group full">
+          <label>Názov</label>
+          <input type="text" id="fEditName" placeholder="napr. Skúška pred koncertom">
+        </div>
         <div class="form-group">
           <label>Dátum</label>
           <input type="date" id="fEditDate">
@@ -898,6 +916,8 @@ function init() {
   // Pre-fill today date in new session
   const today = new Date();
   document.getElementById('fDate').value = today.toISOString().slice(0,10);
+
+  restoreTab();
 }
 
 function pickMember(name) {
@@ -928,7 +948,16 @@ function switchView(view, btn) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
+  else document.querySelector('.nav-btn[data-view="' + view + '"]')?.classList.add('active');
+  localStorage.setItem('bandActiveTab', view);
+}
+
+function restoreTab() {
+  const saved = localStorage.getItem('bandActiveTab');
+  if (saved && document.getElementById('view-' + saved)) {
+    switchView(saved, null);
+  }
 }
 
 // ==================== SESSIONS ====================
@@ -974,7 +1003,7 @@ function renderSessions() {
           <div class="session-month">${month}</div>
         </div>
         <div class="session-info">
-          <div class="session-name">${s.note || formatDateLong(new Date(s.date + 'T' + (s.time||'19:00')))}</div>
+          <div class="session-name">${s.title || s.note || formatDateLong(new Date(s.date + 'T' + (s.time||'19:00')))}</div>
           <div class="session-meta">
             <span class="session-tag">🕐 ${s.time || '19:00'}</span>
             <span class="session-tag">📍 ${s.venue || 'Skúšobňa'}</span>
@@ -1064,6 +1093,7 @@ function openEditSession(id) {
   const s = sessions.find(x => x.id === id);
   if (!s) return;
   document.getElementById('fEditSessionId').value = id;
+  document.getElementById('fEditName').value = s.title || '';
   document.getElementById('fEditDate').value = s.date || '';
   document.getElementById('fEditTime').value = s.time || '19:00';
   document.getElementById('fEditVenue').value = s.venue || '';
@@ -1077,6 +1107,7 @@ function saveEditSession() {
   const id = document.getElementById('fEditSessionId').value;
   const s = sessions.find(x => x.id === id);
   if (!s) return;
+  s.title = document.getElementById('fEditName').value.trim();
   s.date = document.getElementById('fEditDate').value;
   s.time = document.getElementById('fEditTime').value;
   s.venue = document.getElementById('fEditVenue').value.trim() || 'Skúšobňa';
@@ -1089,18 +1120,23 @@ function saveEditSession() {
 function openNewSession() { document.getElementById('newSessionModal').classList.add('open'); }
 function closeNewSession() { document.getElementById('newSessionModal').classList.remove('open'); }
 
-function saveSession() {
+async function saveSession() {
+  const title = document.getElementById('fName').value.trim();
   const date = document.getElementById('fDate').value;
   const time = document.getElementById('fTime').value;
   const venue = document.getElementById('fVenue').value.trim();
   const note = document.getElementById('fSessionNote').value.trim();
   if (!date) { showToast('Zadaj dátum!', 'error'); return; }
-  const s = { id: Date.now().toString(), date, time, venue: venue || 'Skúšobňa', note, status: 'proposed', votes: {}, setlist: [], createdBy: myName };
+  const s = { id: Date.now().toString(), title: title || '', date, time, venue: venue || 'Skúšobňa', note, status: 'proposed', votes: {}, setlist: [], created_by: myName };
   s.votes[myName] = 'yes';
   sessions.push(s);
   saveLocal(); renderSessions(); closeNewSession();
-  showToast('Termín navrhnutý! 📅', 'success');
-  syncToSupabase('sessions');
+  // Clear form
+  document.getElementById('fName').value = '';
+  document.getElementById('fVenue').value = '';
+  document.getElementById('fSessionNote').value = '';
+  const ok = await syncToSupabase('sessions');
+  showToast(ok ? 'Termín uložený a zdieľaný! 📅' : 'Uložené lokálne (sync zlyhal)', ok ? 'success' : 'error');
 }
 
 function openSetlistPicker(sessionId) {
@@ -1221,8 +1257,8 @@ function saveSong() {
     chords: document.getElementById('fChords').value,
     lyrics: document.getElementById('fLyrics').value,
     notes: document.getElementById('fNotes').value.trim(),
-    updatedBy: myName,
-    updatedAt: new Date().toISOString()
+    updated_by: myName,
+    updated_at: new Date().toISOString()
   };
   if (editingSongId) {
     const idx = songs.findIndex(x => x.id === editingSongId);
@@ -1230,7 +1266,7 @@ function saveSong() {
     showToast('Pieseň aktualizovaná ✓', 'success');
   } else {
     data.id = Date.now().toString();
-    data.createdBy = myName;
+    data.created_by = myName;
     songs.push(data);
     showToast('Pieseň pridaná 🎵', 'success');
   }
@@ -1256,7 +1292,7 @@ function openSongById(id) {
   if (s.bpm) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Tempo</span><div style="font-size:1.1rem;font-weight:600;margin-top:3px">♩ ${s.bpm} BPM</div></div>`);
   if (s.tags) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Tagy</span><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${s.tags.split(',').map(t=>`<span class="tag">${t.trim()}</span>`).join('')}</div></div>`);
   if (s.notes) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Poznámky</span><div style="margin-top:6px;font-size:0.88rem;line-height:1.6;color:var(--muted)">${s.notes}</div></div>`);
-  infoParts.push(`<div style="margin-top:16px;font-size:0.75rem;color:#444">Pridané: ${s.createdBy || '?'} · Upravené: ${s.updatedBy || '?'}</div>`);
+  infoParts.push(`<div style="margin-top:16px;font-size:0.75rem;color:#444">Pridané: ${s.created_by || '?'} · Upravené: ${s.updated_by || '?'}</div>`);
   document.getElementById('infoDisplay').innerHTML = infoParts.join('') || '<span style="color:var(--muted)">Žiadne info</span>';
 
   // Reset to chords tab
