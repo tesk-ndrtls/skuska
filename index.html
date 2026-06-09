@@ -683,7 +683,7 @@
     <div class="section-header">
       <div>
         <div class="section-title">Termíny skúšok</div>
-        <div class="section-sub" id="sessionSubtitle">Navrhni dátum, hlasuj, dohodňte sa</div>
+        <div class="section-sub" id="sessionSubtitle">Navrhni dátum, hlasuj, dohodnite sa</div>
       </div>
       <button class="btn btn-primary" onclick="openNewSession()">+ Nový termín</button>
     </div>
@@ -768,7 +768,7 @@
     </div>
     <div id="autoscrollBar" style="display:none;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--panel2);flex-shrink:0;align-items:center;gap:10px">
       <span style="font-size:0.78rem;color:var(--muted)">Rýchlosť</span>
-      <input type="range" id="scrollSpeed" min="1" max="10" value="3" style="flex:1;accent-color:var(--accent);width:auto;padding:0;height:20px;background:transparent;border:none">
+      <input type="range" id="scrollSpeed" min="1" max="20" value="5" style="flex:1;accent-color:var(--accent);width:auto;padding:0;height:20px;background:transparent;border:none">
       <span style="font-size:0.78rem;color:var(--accent)" id="scrollSpeedLabel">3</span>
     </div>
     <div class="modal-body" id="songModalBody">
@@ -1259,8 +1259,8 @@ function renderSongs(filter = '') {
     return `
     <div class="song-card" onclick="openSongById('${s.id}')">
       <div class="song-card-header">
-        <div class="song-title">${s.title}</div>
-        <div class="song-artist">${s.artist || '—'}</div>
+        <div class="song-title">${escHtml(s.title)}</div>
+        <div class="song-artist">${escHtml(s.artist || '—')}</div>
       </div>
       ${chordPreview ? `<div class="song-chord-strip">${chordPreview}</div>` : ''}
       <div class="song-card-footer">
@@ -1388,26 +1388,37 @@ function closeSongModal() { stopAutoscroll(); document.getElementById('songModal
 function isChordLine(line) {
   const t = line.trim();
   if (!t) return false;
-  // Must contain at least one chord token
-  if (!/[A-G][#b]?/.test(t)) return false;
-  // Remove all valid chord tokens and separators; what remains should be mostly whitespace
-  const stripped = t.replace(/[A-G][#b]?(?:maj|min|m|aug|dim|sus[24]?|add)?[0-9]?(?:\/[A-G][#b]?)?/g, '').replace(/[\s\-|\/]/g,'');
-  return stripped.length <= 2;
+  // If line has any diacritics or lowercase letters (a-z except chord modifiers), it's lyrics
+  if (/[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿžščřďťňľĺŕäöüáéíóúýčšžďťňľĺŕ]/i.test(t)) return false;
+  if (/[a-z]/.test(t.replace(/(maj|min|m|aug|dim|sus[24]?|add|b)/g,''))) return false;
+  // Must contain at least one valid chord token
+  if (!/\b[A-G][#b]?(?:maj7?|min7?|m7?|aug|dim|sus[24]?|add9?)?[0-9]?\b/.test(t)) return false;
+  // Remove all valid chord tokens and separators; what remains should be whitespace only
+  const stripped = t.replace(/[A-G][#b]?(?:maj7?|min7?|m7?|aug|dim|sus[24]?|add9?)?[0-9]?(?:\/[A-G][#b]?)?/g, '').replace(/[\s\-|\/()]/g,'');
+  return stripped.length === 0;
 }
 
 
 // ==================== AUTOSCROLL ====================
 let scrollInterval = null;
 let isScrolling = false;
+let scrollAccum = 0; // sub-pixel accumulator for slow speeds
+
+// Speed curve: exponential so low end is very slow, high end is fast
+// slider 1-20 → px per second: ~4 to ~120
+function sliderToPixPerSec(val) {
+  // exponential: f(1)≈4, f(10)≈24, f(20)≈120
+  return 4 * Math.pow(30, (val - 1) / 19);
+}
 
 function toggleAutoscroll() {
   const btn = document.getElementById('autoscrollBtn');
   const bar = document.getElementById('autoscrollBar');
-  const body = document.getElementById('songModalBody');
   if (isScrolling) {
     stopAutoscroll();
   } else {
     isScrolling = true;
+    scrollAccum = 0;
     btn.textContent = '⏸ Stop';
     btn.style.background = 'var(--accent-dim)';
     btn.style.borderColor = 'var(--accent)';
@@ -1417,29 +1428,46 @@ function toggleAutoscroll() {
   }
 }
 
+function getSongScrollKey() {
+  const modal = document.getElementById('songModal');
+  return modal ? 'scrollSpeed_' + (modal.dataset.songId || 'default') : 'scrollSpeed_default';
+}
+
 function startAutoscroll() {
   const speedEl = document.getElementById('scrollSpeed');
   const labelEl = document.getElementById('scrollSpeedLabel');
+  // Restore per-song speed
+  const saved = localStorage.getItem(getSongScrollKey());
+  if (saved) { speedEl.value = saved; }
+  labelEl.textContent = speedEl.value;
   speedEl.oninput = () => {
     labelEl.textContent = speedEl.value;
-    if (isScrolling) { clearInterval(scrollInterval); scrollInterval = setInterval(doScroll, 50); }
+    localStorage.setItem(getSongScrollKey(), speedEl.value);
   };
-  scrollInterval = setInterval(doScroll, 50);
-}
-
-function doScroll() {
-  const body = document.getElementById('songModalBody');
-  if (!body) return;
-  const speed = parseInt(document.getElementById('scrollSpeed').value);
-  body.scrollTop += speed * 0.5;
-  // Stop at bottom
-  if (body.scrollTop + body.clientHeight >= body.scrollHeight - 10) {
-    stopAutoscroll();
+  let lastTime = null;
+  function frame(ts) {
+    if (!isScrolling) return;
+    if (lastTime === null) lastTime = ts;
+    const dt = Math.min(ts - lastTime, 100); // cap at 100ms to avoid jump after tab switch
+    lastTime = ts;
+    const body = document.getElementById('songModalBody');
+    if (!body) { stopAutoscroll(); return; }
+    const pxPerSec = sliderToPixPerSec(parseFloat(speedEl.value));
+    scrollAccum += pxPerSec * dt / 1000;
+    const pixels = Math.floor(scrollAccum);
+    if (pixels > 0) {
+      body.scrollTop += pixels;
+      scrollAccum -= pixels;
+    }
+    if (body.scrollTop + body.clientHeight >= body.scrollHeight - 10) {
+      stopAutoscroll(); return;
+    }
+    requestAnimationFrame(frame);
   }
+  requestAnimationFrame(frame);
 }
 
 function stopAutoscroll() {
-  clearInterval(scrollInterval);
   isScrolling = false;
   const btn = document.getElementById('autoscrollBtn');
   const bar = document.getElementById('autoscrollBar');
@@ -1539,7 +1567,8 @@ async function sbFetch(path, method = 'GET', body = null, extraHeaders = {}) {
     headers: {
       'apikey': SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
+      'Accept-Charset': 'utf-8',
       ...extraHeaders
     }
   };
