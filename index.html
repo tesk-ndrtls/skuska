@@ -27,50 +27,59 @@
     color: var(--text);
     font-family: 'Special Elite', 'JetBrains Mono', monospace;
     min-height: 100vh;
-    font-size: 17px;
+    font-size: 18px;
   }
 
   /* HEADER */
   header {
+    position: sticky;
+    top: 0;
+    background: rgba(15,15,15,0.97);
+    backdrop-filter: blur(10px);
+    z-index: 100;
     border-bottom: 1px solid var(--border);
-    padding: 0 24px;
+  }
+  .header-top {
+    padding: 12px 24px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .header-nav {
+    padding: 0 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 60px;
-    position: sticky;
-    top: 0;
-    background: rgba(15,15,15,0.95);
-    backdrop-filter: blur(8px);
-    z-index: 100;
+    gap: 2px;
   }
   .logo {
     font-family: 'Wallrous', 'Special Elite', monospace;
     font-weight: 400;
-    font-size: 2.4rem;
+    font-size: 6rem;
     letter-spacing: 0.02em;
     color: var(--accent);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    line-height: 1;
   }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  nav { display: flex; gap: 4px; }
+  nav { display: flex; gap: 2px; flex: 1; }
   .nav-btn {
     background: none;
     border: none;
     color: var(--muted);
     font-family: 'Special Elite', 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 500;
-    padding: 7px 16px;
-    border-radius: 6px;
+    padding: 10px 18px;
+    border-radius: 0;
     cursor: pointer;
     transition: all 0.15s;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
   }
-  .nav-btn:hover { color: var(--text); background: var(--panel); }
-  .nav-btn.active { color: var(--accent); background: var(--accent-dim); }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 
   .user-area { display: flex; align-items: center; gap: 10px; }
   .user-chip {
@@ -600,8 +609,10 @@
     .session-actions { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 4px; }
     .songs-grid { grid-template-columns: 1fr; }
     .form-grid { grid-template-columns: 1fr; }
-    nav .nav-btn span { display: none; }
-    .logo { font-size: 1.8rem !important; }
+    .logo { font-size: 3.5rem !important; }
+    .header-top { padding: 8px 16px 6px; }
+    .nav-btn { font-size: 0.85rem; padding: 9px 12px; }
+    nav .nav-btn span { display: inline !important; }
     .section-title { font-size: 1.2rem; }
     .modal { margin: 8px 0; max-height: calc(100vh - 16px); }
     .chat-wrap { height: calc(100vh - 200px); }
@@ -612,19 +623,21 @@
 <body>
 
 <header>
-  <div class="logo">
-    <span id="bandNameDisplay">Kvašung</span>
+  <div class="header-top">
+    <div class="logo" id="bandNameDisplay">Kvašung</div>
   </div>
-  <nav>
-    <button class="nav-btn active" data-view="sessions" onclick="switchView('sessions',this)">📅 <span>Termíny</span></button>
-    <button class="nav-btn" data-view="songs" onclick="switchView('songs',this)">🎵 <span>Naše hity</span></button>
-    <button class="nav-btn" data-view="chat" onclick="switchView('chat',this)">💬 <span>Chat</span></button>
-  </nav>
-  <div class="user-area">
-    <div class="user-chip" onclick="switchUser()" title="Prepnúť užívateľa" style="cursor:pointer">
-      <div class="avatar" id="headerAvatar">?</div>
-      <span id="headerName">—</span>
-      <span style="color:var(--muted);font-size:0.75rem;margin-left:2px">⇄</span>
+  <div class="header-nav">
+    <nav>
+      <button class="nav-btn active" data-view="sessions" onclick="switchView('sessions',this)">📅 <span>Termíny</span></button>
+      <button class="nav-btn" data-view="songs" onclick="switchView('songs',this)">🎵 <span>Naše hity</span></button>
+      <button class="nav-btn" data-view="chat" onclick="switchView('chat',this)">💬 <span>Chat</span></button>
+    </nav>
+    <div class="user-area">
+      <div class="user-chip" onclick="switchUser()" title="Prepnúť užívateľa" style="cursor:pointer">
+        <div class="avatar" id="headerAvatar">?</div>
+        <span id="headerName">—</span>
+        <span style="color:var(--muted);font-size:0.75rem;margin-left:2px">⇄</span>
+      </div>
     </div>
   </div>
 </header>
@@ -990,7 +1003,7 @@ function updateHeader() {
   document.getElementById('headerAvatar').textContent = myName.charAt(0).toUpperCase();
 }
 function updateBandName() {
-  document.getElementById('bandNameDisplay').textContent = 'Kvašung';
+  // bandName is static
 }
 
 // ==================== VIEWS ====================
