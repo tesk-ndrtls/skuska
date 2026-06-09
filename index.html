@@ -46,7 +46,7 @@
   .logo {
     font-family: 'Wallrous', 'Space Grotesk', sans-serif;
     font-weight: 400;
-    font-size: 1.5rem;
+    font-size: 2rem;
     letter-spacing: 0.02em;
     color: var(--accent);
     display: flex;
@@ -484,6 +484,41 @@
   }
   .member-chip .avatar { width: 22px; height: 22px; font-size: 0.65rem; }
 
+
+  /* CHAT */
+  .chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 180px); min-height: 400px; }
+  .chat-messages {
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+    padding: 16px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px 12px 0 0;
+  }
+  .chat-msg { display: flex; gap: 10px; align-items: flex-start; }
+  .chat-msg.mine { flex-direction: row-reverse; }
+  .chat-msg .avatar { flex-shrink: 0; width: 28px; height: 28px; font-size: 0.75rem; }
+  .chat-bubble {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 12px; max-width: 75%;
+    font-size: 0.87rem; line-height: 1.5;
+  }
+  .chat-msg.mine .chat-bubble { background: var(--accent-dim); border-color: rgba(245,197,24,0.2); }
+  .chat-meta { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
+  .chat-msg.mine .chat-meta { text-align: right; }
+  .chat-name { font-weight: 600; font-size: 0.75rem; color: var(--accent); margin-bottom: 2px; }
+  .chat-msg.mine .chat-name { display: none; }
+  .chat-input-row {
+    display: flex; gap: 8px; padding: 10px 12px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-top: none; border-radius: 0 0 12px 12px;
+  }
+  .chat-input {
+    flex: 1; background: var(--panel2); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 8px;
+    font-family: 'Inter', sans-serif; font-size: 0.88rem; outline: none;
+    transition: border-color 0.15s;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 0.88rem; }
+
   /* MEMBER PICKER */
   .member-pick-btn {
     display: flex; align-items: center; gap: 14px;
@@ -512,6 +547,7 @@
   <nav>
     <button class="nav-btn active" data-view="sessions" onclick="switchView('sessions',this)">📅 <span>Termíny</span></button>
     <button class="nav-btn" data-view="songs" onclick="switchView('songs',this)">🎵 <span>Pesničky</span></button>
+    <button class="nav-btn" data-view="chat" onclick="switchView('chat',this)">💬 <span>Chat</span></button>
   </nav>
   <div class="user-area">
     <div class="user-chip" onclick="switchUser()" title="Prepnúť užívateľa" style="cursor:pointer">
@@ -588,6 +624,26 @@
   </div>
 
 </main>
+
+
+  <!-- ===== CHAT VIEW ===== -->
+  <div class="view" id="view-chat">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Chat</div>
+        <div class="section-sub">Komunikácia pre kapelu</div>
+      </div>
+    </div>
+    <div class="chat-wrap">
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-empty" id="chatEmpty">Zatiaľ žiadne správy. Napíš prvý! 🎸</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" type="text" placeholder="Napíš správu…" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn btn-primary" onclick="sendChat()">Odoslať</button>
+      </div>
+    </div>
+  </div>
 
 <!-- ===== SONG DETAIL MODAL ===== -->
 <div class="modal-overlay" id="songModal">
@@ -778,7 +834,9 @@ function init() {
     document.getElementById('nameModal').classList.remove('open');
     updateHeader();
     loadFromSupabase();
+    loadChatFromSupabase();
   }
+  renderChat();
   updateBandName();
   renderSessions();
   renderSongs();
@@ -796,6 +854,7 @@ function pickMember(name) {
   updateHeader();
   updateBandName();
   loadFromSupabase();
+  loadChatFromSupabase();
   showToast('Vitaj, ' + myName + '! 🎸', 'success');
 }
 
@@ -872,7 +931,7 @@ function renderSessions() {
         <div class="session-actions">
           <span class="status-badge badge-${status}">${status === 'confirmed' ? '✓ Potvrdená' : status === 'cancelled' ? '✕ Zrušená' : '● Návrh'}</span>
           <div style="display:flex;gap:6px">
-            ${status === 'proposed' ? `<button class="btn btn-ghost btn-sm" onclick="confirmSession('${s.id}');event.stopPropagation()">✓ Potvrdiť</button>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="confirmSession('${s.id}');event.stopPropagation()">${status === 'confirmed' ? '↩ Zrušiť potvrdenie' : '✓ Potvrdiť'}</button>
             <button class="btn btn-danger btn-sm" onclick="deleteSession('${s.id}');event.stopPropagation()">✕</button>
           </div>
         </div>
@@ -902,36 +961,43 @@ function toggleExpand(id) {
   el.classList.toggle('open');
 }
 
+const BAND_MEMBERS = ['Miki', 'Lukyko', 'Saki', 'Tesko', 'Hurka'];
+
 function getKnownMembers() {
-  const members = new Set([myName]);
-  sessions.forEach(s => {
-    if (s.votes) Object.keys(s.votes).forEach(m => members.add(m));
-  });
-  return [...members].filter(Boolean);
+  return BAND_MEMBERS;
 }
 
 function vote(sessionId, val) {
   const s = sessions.find(x => x.id === sessionId);
   if (!s) return;
   if (!s.votes) s.votes = {};
-  s.votes[myName] = val;
+  // Toggle: clicking same vote again removes it
+  if (s.votes[myName] === val) {
+    delete s.votes[myName];
+    showToast('Hlas zrušený', 'success');
+  } else {
+    s.votes[myName] = val;
+    showToast('Hlas uložený 👍', 'success');
+  }
   saveLocal();
   renderSessions();
-  showToast('Hlas uložený 👍', 'success');
-  // Keep expand open
   setTimeout(() => document.getElementById('exp-' + sessionId)?.classList.add('open'), 50);
   syncToSupabase('sessions');
 }
 
 function confirmSession(id) {
   const s = sessions.find(x => x.id === id);
-  if (s) { s.status = 'confirmed'; saveLocal(); renderSessions(); showToast('Skúška potvrdená ✓', 'success'); syncToSupabase('sessions'); }
+  if (!s) return;
+  s.status = s.status === 'confirmed' ? 'proposed' : 'confirmed';
+  saveLocal(); renderSessions();
+  showToast(s.status === 'confirmed' ? 'Skúška potvrdená ✓' : 'Vrátené na návrh', 'success');
+  syncToSupabase('sessions');
 }
 function deleteSession(id) {
   if (!confirm('Zmazať termín?')) return;
   sessions = sessions.filter(x => x.id !== id);
   saveLocal(); renderSessions(); showToast('Termín zmazaný', 'error');
-  syncToSupabase('sessions');
+  deleteFromSupabase('sessions', id);
 }
 
 function openNewSession() { document.getElementById('newSessionModal').classList.add('open'); }
@@ -1165,7 +1231,7 @@ function dismissBanner() {
 }
 
 // ==================== SUPABASE SYNC ====================
-async function sbFetch(path, method = 'GET', body = null) {
+async function sbFetch(path, method = 'GET', body = null, extraHeaders = {}) {
   if (!SUPABASE_URL || !SUPABASE_KEY) return null;
   const opts = {
     method,
@@ -1173,15 +1239,14 @@ async function sbFetch(path, method = 'GET', body = null) {
       'apikey': SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY,
       'Content-Type': 'application/json',
-      'Prefer': method === 'POST' ? 'return=minimal' : ''
+      ...extraHeaders
     }
   };
-  if (body) opts.body = JSON.stringify(body);
+  if (body != null) opts.body = JSON.stringify(body);
   try {
     const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
-    if (!res.ok) return null;
-    if (method === 'GET') return await res.json();
-    return true;
+    if (method === 'GET') return res.ok ? await res.json() : null;
+    return res.ok;
   } catch { return null; }
 }
 
@@ -1198,8 +1263,16 @@ async function syncToSupabase(table) {
   if (!SUPABASE_URL || !SUPABASE_KEY) return;
   const data = table === 'sessions' ? sessions : songs;
   const t = table === 'sessions' ? 'band_sessions' : 'band_songs';
-  // Upsert
-  await sbFetch(t + '?on_conflict=id', 'POST', data);
+  // Upsert with merge-duplicates
+  await sbFetch(t, 'POST', data, {
+    'Prefer': 'resolution=merge-duplicates,return=minimal'
+  });
+}
+
+async function deleteFromSupabase(table, id) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return;
+  const t = table === 'sessions' ? 'band_sessions' : 'band_songs';
+  await sbFetch(t + '?id=eq.' + id, 'DELETE');
 }
 
 // ==================== LOCAL STORAGE ====================
@@ -1226,8 +1299,69 @@ function searchUG() {
   window.open('https://www.ultimate-guitar.com/search.php?search_type=title&value=' + q, '_blank');
 }
 
+
+// ==================== CHAT ====================
+let chatMessages = JSON.parse(localStorage.getItem('bandChat') || '[]');
+
+function renderChat() {
+  const container = document.getElementById('chatMessages');
+  const empty = document.getElementById('chatEmpty');
+  if (!chatMessages.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  const colors = { Miki: '#F5C518', Lukyko: '#4A9EE8', Saki: '#4CAF7D', Tesko: '#E05555', Hurka: '#C97EF5' };
+  container.innerHTML = chatMessages.map(m => {
+    const mine = m.author === myName;
+    const time = new Date(m.ts).toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit'});
+    const date = new Date(m.ts).toLocaleDateString('sk-SK', {day:'numeric', month:'short'});
+    const color = colors[m.author] || 'var(--accent)';
+    return `<div class="chat-msg ${mine ? 'mine' : ''}">
+      <div class="avatar" style="background:${color};color:#0F0F0F">${m.author.charAt(0)}</div>
+      <div>
+        ${!mine ? `<div class="chat-name" style="color:${color}">${m.author}</div>` : ''}
+        <div class="chat-bubble">${escHtml(m.text)}</div>
+        <div class="chat-meta">${date} ${time}</div>
+      </div>
+    </div>`;
+  }).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !myName) return;
+  const msg = { id: Date.now().toString(), author: myName, text, ts: new Date().toISOString() };
+  chatMessages.push(msg);
+  localStorage.setItem('bandChat', JSON.stringify(chatMessages));
+  input.value = '';
+  renderChat();
+  syncChatToSupabase(msg);
+}
+
+async function syncChatToSupabase(msg) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return;
+  await sbFetch('band_chat', 'POST', [msg], { 'Prefer': 'resolution=merge-duplicates,return=minimal' });
+}
+
+async function loadChatFromSupabase() {
+  const data = await sbFetch('band_chat?select=*&order=ts.asc&limit=200');
+  if (data && data.length) {
+    chatMessages = data;
+    localStorage.setItem('bandChat', JSON.stringify(chatMessages));
+    renderChat();
+  }
+}
+
 // Init
 init();
+
+// Auto-refresh chat every 15s
+setInterval(() => {
+  if (document.getElementById('view-chat')?.classList.contains('active')) {
+    loadChatFromSupabase();
+  }
+}, 15000);
+
 </script>
 </body>
 </html>
