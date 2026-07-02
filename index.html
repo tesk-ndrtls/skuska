@@ -1388,14 +1388,31 @@ function closeSongModal() { stopAutoscroll(); document.getElementById('songModal
 function isChordLine(line) {
   const t = line.trim();
   if (!t) return false;
-  // If line has any diacritics or lowercase letters (a-z except chord modifiers), it's lyrics
+
+  // Bar/tab format with pipes → definitely chords
+  if (t.includes('|')) return true;
+
+  // Repeat marker alone (x2, x3)
+  if (/^x\d+$/i.test(t)) return true;
+
+  // Diacritics → lyrics
   if (/[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿžščřďťňľĺŕäöüáéíóúýčšžďťňľĺŕ]/i.test(t)) return false;
-  if (/[a-z]/.test(t.replace(/(maj|min|m|aug|dim|sus[24]?|add|b)/g,''))) return false;
-  // Must contain at least one valid chord token
-  if (!/\b[A-G][#b]?(?:maj7?|min7?|m7?|aug|dim|sus[24]?|add9?)?[0-9]?\b/.test(t)) return false;
-  // Remove all valid chord tokens and separators; what remains should be whitespace only
-  const stripped = t.replace(/[A-G][#b]?(?:maj7?|min7?|m7?|aug|dim|sus[24]?|add9?)?[0-9]?(?:\/[A-G][#b]?)?/g, '').replace(/[\s\-|\/()]/g,'');
-  return stripped.length === 0;
+
+  // Contractions like don't, we're, can't → lyrics
+  if (/[a-z]'[a-z]/i.test(t)) return false;
+
+  // Remove all valid chord tokens (incl. Fm6, Am7, E7/G#, sus4, add9)
+  let stripped = t.replace(/\b[A-G][#b]?(?:maj7?|min7?|m(?:aj)?(?:6|7|9|11|13)?|aug|dim7?|sus[24]?|add(?:9|11)?|[679]|11|13)?(?:\/[A-G][#b]?)?\b/g, '');
+  // Remove allowed separators, N.C., repeat markers
+  stripped = stripped.replace(/[\s|.\-#]/g, '').replace(/N\.?C\.?/g, '').replace(/x\d+/gi, '');
+
+  // Any remaining lowercase → lyrics
+  if (/[a-z]/.test(stripped)) return false;
+
+  // Must contain at least one chord token
+  if (!/\b[A-G][#b]?/.test(t)) return false;
+
+  return true;
 }
 
 
