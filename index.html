@@ -348,6 +348,12 @@
     background: var(--panel2); color: var(--muted);
     border: 1px solid var(--border); white-space: nowrap;
   }
+  .filter-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700; color: #0F0F0F;
+    font-family: 'Special Elite', monospace; flex-shrink: 0;
+  }
   .tag.key { color: var(--accent); border-color: rgba(245,197,24,0.2); background: rgba(245,197,24,0.06); }
 
   /* SONG DETAIL MODAL */
@@ -1335,6 +1341,14 @@ function openSetlistPicker(sessionId) {
 }
 
 // ==================== SONGS ====================
+function filterColor(name) {
+  // Deterministic color from category name
+  const colors = ['#4A9EE8','#4CAF7D','#E05555','#C97EF5','#F5A623','#26C6DA','#EC407A','#7E57C2'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
 function renderSongs(filter = '') {
   const grid = document.getElementById('songsGrid');
   const empty = document.getElementById('songsEmpty');
@@ -1358,7 +1372,7 @@ function renderSongs(filter = '') {
       </div>
       <div class="song-card-side">
         ${s.key ? `<span class="tag key">${s.key}</span>` : ''}
-        ${s.filter ? `<span class="tag" style="border-color:rgba(74,158,232,0.3);color:var(--confirm)">${escHtml(s.filter)}</span>` : ''}
+        ${s.filter ? `<span class="filter-dot" style="background:${filterColor(s.filter)}" title="${escHtml(s.filter)}">${escHtml(s.filter.charAt(0).toUpperCase())}</span>` : ''}
         ${s.youtube ? `<span class="tag" style="color:#E05555">▶</span>` : ''}
       </div>
     </div>`;
