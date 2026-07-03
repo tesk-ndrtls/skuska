@@ -303,50 +303,50 @@
   }
 
   .songs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .song-card {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     cursor: pointer;
-    transition: border-color 0.15s, transform 0.15s;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
   }
-  .song-card:hover { border-color: #3E3E3E; transform: translateY(-1px); }
+  .song-card:hover { border-color: #3E3E3E; background: var(--panel2); }
 
-  .song-card-header {
-    padding: 14px 16px 10px;
-  }
+  .song-card-main { flex: 1; min-width: 0; }
   .song-title {
     font-family: 'Special Elite', monospace;
-    font-weight: 700; font-size: 1.1rem;
+    font-weight: 700; font-size: 1rem;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.2;
   }
-  .song-artist { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+  .song-artist { font-size: 0.78rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .song-chord-strip {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: var(--accent);
-    background: var(--accent-dim);
-    padding: 6px 16px;
-    border-top: 1px solid rgba(245,197,24,0.1);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+    opacity: 0.85;
   }
-  .song-card-footer {
-    padding: 8px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-top: 1px solid var(--border);
+  .song-card-side {
+    display: flex; align-items: center; gap: 5px;
+    flex-shrink: 0;
   }
-  .song-meta-tags { display: flex; gap: 6px; }
   .tag {
-    font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+    font-size: 0.68rem; padding: 2px 7px; border-radius: 4px;
     background: var(--panel2); color: var(--muted);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border); white-space: nowrap;
   }
   .tag.key { color: var(--accent); border-color: rgba(245,197,24,0.2); background: rgba(245,197,24,0.06); }
 
@@ -488,6 +488,51 @@
   .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
   .yt-embed { margin-top: 18px; }
   .yt-embed iframe { width: 100%; aspect-ratio: 16/9; border-radius: 10px; border: 1px solid var(--border); }
+
+  /* AUTOSCROLL FULLSCREEN */
+  #autoscrollFullscreen {
+    display: none;
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 500;
+    flex-direction: column;
+  }
+  #autoscrollFullscreen.open { display: flex; }
+  .fs-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .fs-title {
+    font-family: 'Special Elite', monospace;
+    font-weight: 700; font-size: 1.1rem; color: var(--accent);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .fs-close {
+    background: var(--panel2); border: 1px solid var(--danger);
+    color: var(--danger); padding: 8px 16px; border-radius: 8px;
+    font-family: 'Special Elite', monospace; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; flex-shrink: 0; margin-left: 12px;
+  }
+  .fs-close:hover { background: rgba(224,85,85,0.1); }
+  .fs-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fs-slider-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+    flex-shrink: 0;
+  }
+  .fs-slider-bar input[type=range] {
+    flex: 1; accent-color: var(--accent);
+    height: 28px; background: transparent; border: none; padding: 0;
+  }
 
 
   /* LYRICS */
@@ -797,11 +842,6 @@
         <button class="tool-btn" onclick="changeTranspose(1)">+</button>
       </div>
     </div>
-    <div id="autoscrollBar" style="display:none;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--panel2);flex-shrink:0;align-items:center;gap:10px">
-      <span style="font-size:0.78rem;color:var(--muted)">Rýchlosť</span>
-      <input type="range" id="scrollSpeed" min="1" max="20" value="5" style="flex:1;accent-color:var(--accent);width:auto;padding:0;height:20px;background:transparent;border:none">
-      <span style="font-size:0.78rem;color:var(--accent)" id="scrollSpeedLabel">3</span>
-    </div>
     <div class="modal-body" id="songModalBody">
       <div class="modal-tab-content active" id="tab-chords">
         <div class="chordsheet" id="chordsDisplay"></div>
@@ -813,6 +853,21 @@
         <div id="infoDisplay"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ===== AUTOSCROLL FULLSCREEN ===== -->
+<div id="autoscrollFullscreen">
+  <div class="fs-header">
+    <div class="fs-title" id="fsTitle"></div>
+    <button class="fs-close" onclick="stopAutoscroll()">✕ Stop</button>
+  </div>
+  <div class="fs-content chordsheet" id="fsContent"></div>
+  <div class="fs-slider-bar">
+    <span style="font-size:0.8rem;color:var(--muted)">🐢</span>
+    <input type="range" id="fsScrollSpeed" min="1" max="20" value="5">
+    <span style="font-size:0.8rem;color:var(--muted)">🐇</span>
+    <span id="fsSpeedLabel" style="font-size:0.85rem;color:var(--accent);min-width:24px;text-align:center">5</span>
   </div>
 </div>
 
@@ -1294,22 +1349,17 @@ function renderSongs(filter = '') {
 
   grid.innerHTML = visible.map(s => {
     const chordPreview = getChordStrip(s.chords || '');
-    const tags = (s.tags || '').split(',').map(t => t.trim()).filter(Boolean);
     return `
     <div class="song-card" onclick="openSongById('${s.id}')">
-      <div class="song-card-header">
+      <div class="song-card-main">
         <div class="song-title">${escHtml(s.title)}</div>
         <div class="song-artist">${escHtml(s.artist || '—')}</div>
+        ${chordPreview ? `<div class="song-chord-strip">${chordPreview}</div>` : ''}
       </div>
-      ${chordPreview ? `<div class="song-chord-strip">${chordPreview}</div>` : ''}
-      <div class="song-card-footer">
-        <div class="song-meta-tags">
-          ${s.key ? `<span class="tag key">${s.key}${s.capo > 0 ? ' / Capo '+s.capo : ''}</span>` : ''}
-          ${s.filter ? `<span class="tag" style="border-color:rgba(74,158,232,0.3);color:var(--confirm)">${escHtml(s.filter)}</span>` : ''}
-          ${s.youtube ? `<span class="tag" style="color:#E05555">▶</span>` : ''}
-          ${tags.slice(0,1).map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}
-        </div>
-        <span style="font-size:0.75rem;color:var(--muted)">→</span>
+      <div class="song-card-side">
+        ${s.key ? `<span class="tag key">${s.key}</span>` : ''}
+        ${s.filter ? `<span class="tag" style="border-color:rgba(74,158,232,0.3);color:var(--confirm)">${escHtml(s.filter)}</span>` : ''}
+        ${s.youtube ? `<span class="tag" style="color:#E05555">▶</span>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1317,10 +1367,37 @@ function renderSongs(filter = '') {
 
 function getChordStrip(chords) {
   if (!chords) return '';
-  // Extract chord tokens (uppercase letters with optional modifiers)
-  const matches = chords.match(/\b[A-G][#b]?(?:m|maj|min|aug|dim|sus|add)?[0-9]?\b/g) || [];
-  const unique = [...new Set(matches)].slice(0, 12);
-  return unique.join('  ') || '';
+  const lines = chords.split('\n');
+  const sections = [];
+  let currentSection = null;
+  let currentChords = [];
+
+  const flush = () => {
+    if (currentChords.length) {
+      const uniq = [...new Set(currentChords)].slice(0, 6);
+      const label = currentSection ? currentSection + ': ' : '';
+      sections.push(label + uniq.join(' '));
+    }
+    currentChords = [];
+  };
+
+  for (const line of lines) {
+    const t = line.trim();
+    const sec = t.match(/^\[(.+)\]$/);
+    if (sec) {
+      flush();
+      currentSection = sec[1];
+      continue;
+    }
+    if (isChordLine(line)) {
+      const found = line.match(/\b[A-G][#b]?(?:mi|m|maj|min|aug|dim|sus|add)?[0-9]?\b/g) || [];
+      currentChords.push(...found);
+    }
+  }
+  flush();
+
+  // Join first 2 sections for preview
+  return sections.slice(0, 2).join('  ·  ');
 }
 
 function updateTagFilter() {
@@ -1411,7 +1488,7 @@ function openSongById(id) {
   // Reset transpose, restore per-song font size
   currentTranspose = 0;
   document.getElementById('transposeLabel').textContent = '0';
-  const savedFont = localStorage.getItem('fontSize_' + id);
+  const savedFont = localStorage.getItem('fontSize_' + DEVICE_ID);
   currentFontSize = savedFont ? parseFloat(savedFont) : 0.95;
   currentSongChords = s.chords || '(Žiadne akordy)';
 
@@ -1467,11 +1544,11 @@ function isChordLine(line) {
   // Must contain at least one chord token
   if (!/\b[A-G][#b]?/.test(t)) return false;
 
-  // Remove all valid chord tokens (incl. E7sus4, Fm6, Am7, E7/G#, Fmaj7)
-  let stripped = t.replace(/\b[A-G][#b]?(?:maj7?|min7?|m(?:aj)?(?:6|7|9|11|13)?|aug|dim7?|(?:\d)?sus[24]?|sus[24]?|add(?:9|11)?|[679]|11|13)?(?:\/[A-G][#b]?)?\b/g, '');
-  // Remove repeat markers (x2, x3) BEFORE removing digits
+  // Remove all valid chord tokens (incl. Emi Slovak minor, E7sus4, Fm6, Am7, E7/G#)
+  let stripped = t.replace(/\b[A-G][#b]?(?:maj7?|min7?|mi|m(?:aj)?(?:6|7|9|11|13)?|aug|dim7?|(?:\d)?sus[24]?|sus[24]?|add(?:9|11)?|[679]|11|13)?(?:\/[A-G][#b]?)?\b/g, '');
+  // Remove repeat markers before digit removal
   stripped = stripped.replace(/\bx\d+\b/gi, '');
-  // Remove cyrillic and non-ASCII (e.g. С in tabs)
+  // Remove non-ASCII (cyrillic tab chars)
   stripped = stripped.replace(/[^\x00-\x7F]/g, '');
   // Remove separators, brackets, digits
   stripped = stripped.replace(/[\s|.\-#/{}()\d]/g, '');
@@ -1497,46 +1574,79 @@ function sliderToPixPerSec(val) {
   return 4 * Math.pow(30, (val - 1) / 19);
 }
 
+// ==================== DEVICE ID (for per-device settings) ====================
+function getDeviceId() {
+  let id = localStorage.getItem('deviceId');
+  if (!id) {
+    // Detect device type for readable key
+    const ua = navigator.userAgent;
+    let type = 'desktop';
+    if (/iPad|Tablet/i.test(ua)) type = 'tablet';
+    else if (/Mobi|Android|iPhone/i.test(ua)) type = 'mobile';
+    id = type + '_' + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem('deviceId', id);
+  }
+  return id;
+}
+const DEVICE_ID = getDeviceId();
+
 function toggleAutoscroll() {
-  const btn = document.getElementById('autoscrollBtn');
-  const bar = document.getElementById('autoscrollBar');
   if (isScrolling) {
     stopAutoscroll();
   } else {
-    isScrolling = true;
-    scrollAccum = 0;
-    btn.textContent = '⏸ Stop';
-    btn.style.background = 'var(--accent-dim)';
-    btn.style.borderColor = 'var(--accent)';
-    btn.style.color = 'var(--accent)';
-    bar.style.display = 'flex';
-    startAutoscroll();
+    enterAutoscrollFullscreen();
   }
 }
 
-function getSongScrollKey() {
+function enterAutoscrollFullscreen() {
+  isScrolling = true;
+  scrollAccum = 0;
   const modal = document.getElementById('songModal');
-  return modal ? 'scrollSpeed_' + (modal.dataset.songId || 'default') : 'scrollSpeed_default';
+  const songId = modal.dataset.songId;
+  const s = songs.find(x => x.id === songId);
+  if (!s) return;
+
+  // Build fullscreen overlay
+  const fs = document.getElementById('autoscrollFullscreen');
+  const title = document.getElementById('fsTitle');
+  const content = document.getElementById('fsContent');
+  title.textContent = s.title;
+
+  // Render chords (with current transpose + font)
+  let chords = currentSongChords;
+  if (currentTranspose !== 0) {
+    chords = chords.split('\n').map(line =>
+      isChordLine(line) ? transposeChordLine(line, currentTranspose) : line
+    ).join('\n');
+  }
+  content.innerHTML = renderChordSheet(chords);
+  content.style.setProperty('--chord-font', currentFontSize + 'rem');
+
+  // Restore per-device speed
+  const speedEl = document.getElementById('fsScrollSpeed');
+  const saved = localStorage.getItem('scrollSpeed_' + DEVICE_ID);
+  if (saved) speedEl.value = saved;
+  document.getElementById('fsSpeedLabel').textContent = speedEl.value;
+
+  fs.classList.add('open');
+  startAutoscroll();
 }
 
 function startAutoscroll() {
-  const speedEl = document.getElementById('scrollSpeed');
-  const labelEl = document.getElementById('scrollSpeedLabel');
-  // Restore per-song speed
-  const saved = localStorage.getItem(getSongScrollKey());
-  if (saved) { speedEl.value = saved; }
+  const speedEl = document.getElementById('fsScrollSpeed');
+  const labelEl = document.getElementById('fsSpeedLabel');
   labelEl.textContent = speedEl.value;
   speedEl.oninput = () => {
     labelEl.textContent = speedEl.value;
-    localStorage.setItem(getSongScrollKey(), speedEl.value);
+    localStorage.setItem('scrollSpeed_' + DEVICE_ID, speedEl.value);
   };
   let lastTime = null;
   function frame(ts) {
     if (!isScrolling) return;
     if (lastTime === null) lastTime = ts;
-    const dt = Math.min(ts - lastTime, 100); // cap at 100ms to avoid jump after tab switch
+    const dt = Math.min(ts - lastTime, 100);
     lastTime = ts;
-    const body = document.getElementById('songModalBody');
+    const body = document.getElementById('fsContent');
     if (!body) { stopAutoscroll(); return; }
     const pxPerSec = sliderToPixPerSec(parseFloat(speedEl.value));
     scrollAccum += pxPerSec * dt / 1000;
@@ -1555,10 +1665,8 @@ function startAutoscroll() {
 
 function stopAutoscroll() {
   isScrolling = false;
-  const btn = document.getElementById('autoscrollBtn');
-  const bar = document.getElementById('autoscrollBar');
-  if (btn) { btn.textContent = '▶ Autoscroll'; btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = ''; }
-  if (bar) bar.style.display = 'none';
+  const fs = document.getElementById('autoscrollFullscreen');
+  if (fs) fs.classList.remove('open');
 }
 
 // ==================== TRANSPOSE + FONT SIZE ====================
@@ -1580,7 +1688,7 @@ function transposeNote(note, steps) {
 
 function transposeChordLine(line, steps) {
   if (steps === 0) return line;
-  const chordRe = /\b[A-G][#b]?(?:maj7?|min7?|m(?:aj)?(?:6|7|9|11|13)?|aug|dim7?|(?:\d)?sus[24]?|sus[24]?|add(?:9|11)?|[679]|11|13)?(?:\/[A-G][#b]?)?\b/g;
+  const chordRe = /\b[A-G][#b]?(?:maj7?|min7?|mi|m(?:aj)?(?:6|7|9|11|13)?|aug|dim7?|(?:\d)?sus[24]?|sus[24]?|add(?:9|11)?|[679]|11|13)?(?:\/[A-G][#b]?)?\b/g;
   // Collect all chord matches
   const matches = [];
   let m;
@@ -1624,11 +1732,10 @@ function changeFontSize(delta) {
   if (currentFontSize < 0.6) currentFontSize = 0.6;
   if (currentFontSize > 1.6) currentFontSize = 1.6;
   document.getElementById('chordsDisplay').style.setProperty('--chord-font', currentFontSize + 'rem');
-  // Save per song
-  const modal = document.getElementById('songModal');
-  if (modal && modal.dataset.songId) {
-    localStorage.setItem('fontSize_' + modal.dataset.songId, currentFontSize);
-  }
+  const fsContent = document.getElementById('fsContent');
+  if (fsContent) fsContent.style.setProperty('--chord-font', currentFontSize + 'rem');
+  // Save per device
+  localStorage.setItem('fontSize_' + DEVICE_ID, currentFontSize);
 }
 
 function rerenderChords() {
