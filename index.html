@@ -420,57 +420,75 @@
     line-height: 1.5;
     color: var(--text);
     user-select: text;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .cs-section {
     display: block;
     color: var(--confirm);
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     margin: 18px 0 6px;
-    padding: 2px 8px;
+    padding: 3px 10px;
     background: rgba(74,158,232,0.1);
     border-left: 3px solid var(--confirm);
     border-radius: 0 4px 4px 0;
+    font-family: 'Special Elite', monospace;
   }
   .cs-section:first-child { margin-top: 0; }
+  /* Paired chord+lyric block - both same monospace size for perfect alignment */
   .cs-line {
     display: block;
     position: relative;
-    padding-top: 1.4em;
-    margin-bottom: 2px;
-    white-space: pre;
+    padding-top: 1.5em;
+    margin-bottom: 1px;
   }
   .cs-line-lyrics {
     display: block;
-    font-size: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--chord-font, 0.95rem);
     color: var(--text);
-    line-height: 1.4;
+    line-height: 1.35;
+    white-space: pre;
   }
   .cs-line-chords {
     display: block;
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--chord-font, 0.95rem);
     font-weight: 700;
     color: var(--accent);
     line-height: 1.2;
     white-space: pre;
     pointer-events: none;
   }
-  /* Chord-only lines (no lyrics below) */
+  /* Chord-only lines */
   .cs-chord-only {
     display: block;
-    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--chord-font, 0.95rem);
     font-weight: 700;
     color: var(--accent);
-    line-height: 1.6;
+    line-height: 1.7;
     white-space: pre;
   }
   .cs-empty { display: block; height: 0.6em; }
+  .tool-group { display: flex; align-items: center; gap: 4px; padding: 2px 8px; background: var(--panel); border-radius: 8px; border: 1px solid var(--border); }
+  .tool-label { font-size: 0.72rem; color: var(--muted); margin-right: 2px; }
+  .tool-btn {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
+    font-size: 1rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-family: monospace; padding: 0;
+  }
+  .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .yt-embed { margin-top: 18px; }
+  .yt-embed iframe { width: 100%; aspect-ratio: 16/9; border-radius: 10px; border: 1px solid var(--border); }
+
 
   /* LYRICS */
   .lyrics-text {
@@ -766,6 +784,19 @@
       <div class="modal-tab" onclick="switchModalTab('lyrics',this)">Text</div>
       <div class="modal-tab" onclick="switchModalTab('info',this)">Info</div>
     </div>
+    <div id="songToolbar" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--panel2);flex-shrink:0;align-items:center">
+      <div class="tool-group">
+        <span class="tool-label">Písmo</span>
+        <button class="tool-btn" onclick="changeFontSize(-1)">−</button>
+        <button class="tool-btn" onclick="changeFontSize(1)">+</button>
+      </div>
+      <div class="tool-group">
+        <span class="tool-label">Transpose</span>
+        <button class="tool-btn" onclick="changeTranspose(-1)">−</button>
+        <span id="transposeLabel" style="font-size:0.8rem;color:var(--accent);min-width:24px;text-align:center">0</span>
+        <button class="tool-btn" onclick="changeTranspose(1)">+</button>
+      </div>
+    </div>
     <div id="autoscrollBar" style="display:none;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--panel2);flex-shrink:0;align-items:center;gap:10px">
       <span style="font-size:0.78rem;color:var(--muted)">Rýchlosť</span>
       <input type="range" id="scrollSpeed" min="1" max="20" value="5" style="flex:1;accent-color:var(--accent);width:auto;padding:0;height:20px;background:transparent;border:none">
@@ -820,12 +851,20 @@
           <input type="text" id="fTags" placeholder="rock, pomalá, obľúbená">
         </div>
         <div class="form-group">
+          <label>Kategória (filter)</label>
+          <input type="text" id="fFilter" placeholder="napr. Koncertný set, Vianoce…">
+        </div>
+        <div class="form-group">
           <label>Capo</label>
           <select id="fCapo">
             <option value="0">Bez capo</option>
             <option value="1">Capo 1</option><option value="2">Capo 2</option><option value="3">Capo 3</option>
             <option value="4">Capo 4</option><option value="5">Capo 5</option>
           </select>
+        </div>
+        <div class="form-group full">
+          <label>YouTube odkaz</label>
+          <input type="text" id="fYoutube" placeholder="https://youtube.com/watch?v=… alebo youtu.be/…">
         </div>
         <div class="form-group full">
           <label style="display:flex;justify-content:space-between;align-items:center">
@@ -1248,7 +1287,7 @@ function renderSongs(filter = '') {
 
   let visible = songs;
   if (filter) visible = visible.filter(s => s.title.toLowerCase().includes(filter.toLowerCase()) || (s.artist||'').toLowerCase().includes(filter.toLowerCase()));
-  if (tagFilter) visible = visible.filter(s => (s.tags||'').toLowerCase().includes(tagFilter.toLowerCase()));
+  if (tagFilter) visible = visible.filter(s => (s.filter||'').toLowerCase() === tagFilter.toLowerCase() || (s.tags||'').toLowerCase().includes(tagFilter.toLowerCase()));
 
   if (!visible.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
@@ -1266,8 +1305,9 @@ function renderSongs(filter = '') {
       <div class="song-card-footer">
         <div class="song-meta-tags">
           ${s.key ? `<span class="tag key">${s.key}${s.capo > 0 ? ' / Capo '+s.capo : ''}</span>` : ''}
-          ${s.bpm ? `<span class="tag">♩ ${s.bpm}</span>` : ''}
-          ${tags.slice(0,2).map(t => `<span class="tag">${t}</span>`).join('')}
+          ${s.filter ? `<span class="tag" style="border-color:rgba(74,158,232,0.3);color:var(--confirm)">${escHtml(s.filter)}</span>` : ''}
+          ${s.youtube ? `<span class="tag" style="color:#E05555">▶</span>` : ''}
+          ${tags.slice(0,1).map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}
         </div>
         <span style="font-size:0.75rem;color:var(--muted)">→</span>
       </div>
@@ -1285,10 +1325,11 @@ function getChordStrip(chords) {
 
 function updateTagFilter() {
   const sel = document.getElementById('tagFilter');
-  const allTags = new Set();
-  songs.forEach(s => (s.tags||'').split(',').map(t=>t.trim()).filter(Boolean).forEach(t => allTags.add(t)));
-  const existing = sel.innerHTML;
-  sel.innerHTML = '<option value="">Všetky</option>' + [...allTags].map(t => `<option value="${t}">${t}</option>`).join('');
+  const current = sel.value;
+  const categories = new Set();
+  songs.forEach(s => { if (s.filter && s.filter.trim()) categories.add(s.filter.trim()); });
+  sel.innerHTML = '<option value="">Všetky kategórie</option>' + [...categories].sort().map(t => `<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('');
+  if (current) sel.value = current;
 }
 
 function filterSongs(val) { renderSongs(val); }
@@ -1298,7 +1339,7 @@ function openAddSong() {
   editingSongId = null;
   document.getElementById('addSongTitle').textContent = 'Pridať pesničku';
   document.getElementById('saveSongBtn').textContent = 'Uložiť pesničku';
-  ['fTitle','fArtist','fChords','fLyrics','fNotes','fTags','fBpm'].forEach(id => document.getElementById(id).value = '');
+  ['fTitle','fArtist','fChords','fLyrics','fNotes','fTags','fBpm','fFilter','fYoutube'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('fKey').value = '';
   document.getElementById('fCapo').value = '0';
   document.getElementById('addSongModal').classList.add('open');
@@ -1318,6 +1359,8 @@ function editCurrentSong() {
   document.getElementById('fKey').value = s.key || '';
   document.getElementById('fBpm').value = s.bpm || '';
   document.getElementById('fTags').value = s.tags || '';
+  document.getElementById('fFilter').value = s.filter || '';
+  document.getElementById('fYoutube').value = s.youtube || '';
   document.getElementById('fCapo').value = s.capo || '0';
   document.getElementById('fChords').value = s.chords || '';
   document.getElementById('fLyrics').value = s.lyrics || '';
@@ -1334,6 +1377,8 @@ function saveSong() {
     key: document.getElementById('fKey').value,
     bpm: document.getElementById('fBpm').value,
     tags: document.getElementById('fTags').value.trim(),
+    filter: document.getElementById('fFilter').value.trim(),
+    youtube: document.getElementById('fYoutube').value.trim(),
     capo: parseInt(document.getElementById('fCapo').value) || 0,
     chords: document.getElementById('fChords').value,
     lyrics: document.getElementById('fLyrics').value,
@@ -1363,16 +1408,28 @@ function openSongById(id) {
   document.getElementById('modalSongTitle').textContent = s.title;
   document.getElementById('modalSongArtist').textContent = s.artist || '';
 
-  // Render chords with section highlighting
-  document.getElementById('chordsDisplay').innerHTML = renderChordSheet(s.chords || '(Žiadne akordy)');
+  // Reset transpose, restore per-song font size
+  currentTranspose = 0;
+  document.getElementById('transposeLabel').textContent = '0';
+  const savedFont = localStorage.getItem('fontSize_' + id);
+  currentFontSize = savedFont ? parseFloat(savedFont) : 0.95;
+  currentSongChords = s.chords || '(Žiadne akordy)';
+
+  // Render chords with alignment + font size
+  document.getElementById('chordsDisplay').innerHTML = renderChordSheet(currentSongChords);
+  document.getElementById('chordsDisplay').style.setProperty('--chord-font', currentFontSize + 'rem');
   document.getElementById('lyricsDisplay').innerHTML = renderLyrics(s.lyrics || '(Žiadny text)');
 
   // Info tab
   const infoParts = [];
   if (s.key) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Tónina</span><div style="font-family:JetBrains Mono,monospace;color:var(--accent);font-size:1.2rem;font-weight:600;margin-top:3px">${s.key}${s.capo>0?' / Capo '+s.capo:''}</div></div>`);
   if (s.bpm) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Tempo</span><div style="font-size:1.1rem;font-weight:600;margin-top:3px">♩ ${s.bpm} BPM</div></div>`);
-  if (s.tags) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Tagy</span><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${s.tags.split(',').map(t=>`<span class="tag">${t.trim()}</span>`).join('')}</div></div>`);
-  if (s.notes) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Poznámky</span><div style="margin-top:6px;font-size:0.88rem;line-height:1.6;color:var(--muted)">${s.notes}</div></div>`);
+  if (s.tags) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Tagy</span><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${s.tags.split(',').map(t=>`<span class="tag">${escHtml(t.trim())}</span>`).join('')}</div></div>`);
+  if (s.filter) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Kategória</span><div style="margin-top:6px"><span class="tag key">${escHtml(s.filter)}</span></div></div>`);
+  if (s.notes) infoParts.push(`<div style="margin-bottom:10px"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em">Poznámky</span><div style="margin-top:6px;font-size:0.88rem;line-height:1.6;color:var(--muted)">${escHtml(s.notes)}</div></div>`);
+  // YouTube embed
+  const ytId = extractYouTubeId(s.youtube || '');
+  if (ytId) infoParts.push(`<div class="yt-embed"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:8px">Video</span><iframe src="https://www.youtube.com/embed/${ytId}" allowfullscreen loading="lazy"></iframe></div>`);
   infoParts.push(`<div style="margin-top:16px;font-size:0.75rem;color:#444">Pridané: ${s.created_by || '?'} · Upravené: ${s.updated_by || '?'}</div>`);
   document.getElementById('infoDisplay').innerHTML = infoParts.join('') || '<span style="color:var(--muted)">Žiadne info</span>';
 
@@ -1381,6 +1438,12 @@ function openSongById(id) {
   document.querySelectorAll('.modal-tab-content').forEach((t,i) => t.classList.toggle('active', i===0));
 
   modal.classList.add('open');
+}
+
+function extractYouTubeId(url) {
+  if (!url) return '';
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : (url.length === 11 ? url : '');
 }
 
 function closeSongModal() { stopAutoscroll(); document.getElementById('songModal').classList.remove('open'); }
@@ -1496,6 +1559,87 @@ function stopAutoscroll() {
   const bar = document.getElementById('autoscrollBar');
   if (btn) { btn.textContent = '▶ Autoscroll'; btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = ''; }
   if (bar) bar.style.display = 'none';
+}
+
+// ==================== TRANSPOSE + FONT SIZE ====================
+let currentTranspose = 0;
+let currentFontSize = 0.95; // rem
+let currentSongChords = '';
+
+const NOTES_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NOTES_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+
+const FLAT_TO_SHARP = {'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'};
+
+function transposeNote(note, steps) {
+  let n = FLAT_TO_SHARP[note] || note;
+  let idx = NOTES_SHARP.indexOf(n);
+  if (idx === -1) return note;
+  return NOTES_SHARP[(idx + steps + 12) % 12];
+}
+
+function transposeChordLine(line, steps) {
+  if (steps === 0) return line;
+  const chordRe = /\b[A-G][#b]?(?:maj7?|min7?|m(?:aj)?(?:6|7|9|11|13)?|aug|dim7?|(?:\d)?sus[24]?|sus[24]?|add(?:9|11)?|[679]|11|13)?(?:\/[A-G][#b]?)?\b/g;
+  // Collect all chord matches
+  const matches = [];
+  let m;
+  while ((m = chordRe.exec(line)) !== null) {
+    const chord = m[0];
+    const parts = chord.split('/');
+    const root = parts[0].match(/^[A-G][#b]?/)[0];
+    const suffix = parts[0].slice(root.length);
+    let newChord = transposeNote(root, steps) + suffix;
+    if (parts[1]) newChord += '/' + transposeNote(parts[1], steps);
+    matches.push({ start: m.index, end: m.index + chord.length, newChord });
+  }
+  // Apply right-to-left to preserve alignment
+  let result = line;
+  for (let i = matches.length - 1; i >= 0; i--) {
+    const { start, end, newChord } = matches[i];
+    const orig = result.slice(start, end);
+    const diff = newChord.length - orig.length;
+    if (diff <= 0) {
+      result = result.slice(0, start) + newChord + ' '.repeat(-diff) + result.slice(end);
+    } else {
+      const after = result.slice(end);
+      const spacesAvail = after.length - after.replace(/^ +/, '').length;
+      const consume = Math.min(diff, spacesAvail);
+      result = result.slice(0, start) + newChord + result.slice(end + consume);
+    }
+  }
+  return result;
+}
+
+function changeTranspose(delta) {
+  currentTranspose += delta;
+  if (currentTranspose > 11) currentTranspose = 11;
+  if (currentTranspose < -11) currentTranspose = -11;
+  document.getElementById('transposeLabel').textContent = (currentTranspose > 0 ? '+' : '') + currentTranspose;
+  rerenderChords();
+}
+
+function changeFontSize(delta) {
+  currentFontSize += delta * 0.08;
+  if (currentFontSize < 0.6) currentFontSize = 0.6;
+  if (currentFontSize > 1.6) currentFontSize = 1.6;
+  document.getElementById('chordsDisplay').style.setProperty('--chord-font', currentFontSize + 'rem');
+  // Save per song
+  const modal = document.getElementById('songModal');
+  if (modal && modal.dataset.songId) {
+    localStorage.setItem('fontSize_' + modal.dataset.songId, currentFontSize);
+  }
+}
+
+function rerenderChords() {
+  let chords = currentSongChords;
+  if (currentTranspose !== 0) {
+    chords = chords.split('\n').map(line => 
+      isChordLine(line) ? transposeChordLine(line, currentTranspose) : line
+    ).join('\n');
+  }
+  document.getElementById('chordsDisplay').innerHTML = renderChordSheet(chords);
+  document.getElementById('chordsDisplay').style.setProperty('--chord-font', currentFontSize + 'rem');
 }
 
 function renderChordSheet(rawText) {
