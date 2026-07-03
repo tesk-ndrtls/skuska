@@ -540,6 +540,54 @@
     height: 28px; background: transparent; border: none; padding: 0;
   }
 
+  /* CLICKABLE CHORDS */
+  .chord-clickable {
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.12s;
+  }
+  .chord-clickable:hover, .chord-clickable:active {
+    background: var(--accent);
+    color: #0F0F0F !important;
+  }
+
+  /* CHORD POPUP */
+  #chordPopup {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 600;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  #chordPopup.open { display: flex; }
+  .chord-popup-inner {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%; max-width: 260px;
+    overflow: hidden;
+  }
+  .chord-popup-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .chord-popup-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 1.4rem; color: var(--accent);
+  }
+  .chord-popup-close {
+    background: var(--panel2); border: 1px solid var(--border);
+    color: var(--muted); width: 30px; height: 30px; border-radius: 6px;
+    cursor: pointer; font-size: 1rem;
+  }
+  .chord-popup-close:hover { color: var(--text); }
+  .chord-popup-body {
+    padding: 20px; display: flex; align-items: center; justify-content: center;
+    min-height: 170px;
+  }
+
 
   /* LYRICS */
   .lyrics-text {
@@ -874,6 +922,17 @@
     <input type="range" id="fsScrollSpeed" min="1" max="20" value="5">
     <span style="font-size:0.8rem;color:var(--muted)">🐇</span>
     <span id="fsSpeedLabel" style="font-size:0.85rem;color:var(--accent);min-width:24px;text-align:center">5</span>
+  </div>
+</div>
+
+<!-- ===== CHORD DIAGRAM POPUP ===== -->
+<div id="chordPopup" onclick="closeChordPopup()">
+  <div class="chord-popup-inner" onclick="event.stopPropagation()">
+    <div class="chord-popup-header">
+      <span class="chord-popup-title" id="chordPopupTitle"></span>
+      <button class="chord-popup-close" onclick="closeChordPopup()">✕</button>
+    </div>
+    <div class="chord-popup-body" id="chordPopupBody"></div>
   </div>
 </div>
 
@@ -1763,6 +1822,150 @@ function rerenderChords() {
   document.getElementById('chordsDisplay').style.setProperty('--chord-font', currentFontSize + 'rem');
 }
 
+
+// ==================== CHORD DIAGRAM DATABASE ====================
+// frets: [E A D G B e] low→high; -1=mute, 0=open. fingers optional.
+const CHORD_SHAPES = {
+  'C':    {frets:[-1,3,2,0,1,0], fingers:[0,3,2,0,1,0]},
+  'C7':   {frets:[-1,3,2,3,1,0], fingers:[0,3,2,4,1,0]},
+  'Cmaj7':{frets:[-1,3,2,0,0,0], fingers:[0,3,2,0,0,0]},
+  'Cm':   {frets:[-1,3,5,5,4,3], fingers:[0,1,3,4,2,1], barre:3},
+  'C#':   {frets:[-1,4,3,1,2,1], fingers:[0,4,3,1,2,1], barre:1},
+  'C#m':  {frets:[-1,4,6,6,5,4], fingers:[0,1,3,4,2,1], barre:4},
+  'D':    {frets:[-1,-1,0,2,3,2], fingers:[0,0,0,1,3,2]},
+  'D7':   {frets:[-1,-1,0,2,1,2], fingers:[0,0,0,2,1,3]},
+  'Dmaj7':{frets:[-1,-1,0,2,2,2], fingers:[0,0,0,1,1,1]},
+  'Dm':   {frets:[-1,-1,0,2,3,1], fingers:[0,0,0,2,3,1]},
+  'Dmi':  {frets:[-1,-1,0,2,3,1], fingers:[0,0,0,2,3,1]},
+  'Dm7':  {frets:[-1,-1,0,2,1,1], fingers:[0,0,0,2,1,1]},
+  'D#':   {frets:[-1,-1,1,3,4,3], fingers:[0,0,1,2,4,3]},
+  'Eb':   {frets:[-1,-1,1,3,4,3], fingers:[0,0,1,2,4,3]},
+  'E':    {frets:[0,2,2,1,0,0], fingers:[0,2,3,1,0,0]},
+  'E7':   {frets:[0,2,0,1,0,0], fingers:[0,2,0,1,0,0]},
+  'Em':   {frets:[0,2,2,0,0,0], fingers:[0,2,3,0,0,0]},
+  'Emi':  {frets:[0,2,2,0,0,0], fingers:[0,2,3,0,0,0]},
+  'Em7':  {frets:[0,2,0,0,0,0], fingers:[0,2,0,0,0,0]},
+  'Emaj7':{frets:[0,2,1,1,0,0], fingers:[0,3,1,2,0,0]},
+  'F':    {frets:[1,3,3,2,1,1], fingers:[1,3,4,2,1,1], barre:1},
+  'F7':   {frets:[1,3,1,2,1,1], fingers:[1,3,1,2,1,1], barre:1},
+  'Fm':   {frets:[1,3,3,1,1,1], fingers:[1,3,4,1,1,1], barre:1},
+  'Fmaj7':{frets:[-1,-1,3,2,1,0], fingers:[0,0,3,2,1,0]},
+  'Fm6':  {frets:[1,-1,0,1,1,1], fingers:[2,0,0,1,1,1]},
+  'F#':   {frets:[2,4,4,3,2,2], fingers:[1,3,4,2,1,1], barre:2},
+  'F#m':  {frets:[2,4,4,2,2,2], fingers:[1,3,4,1,1,1], barre:2},
+  'F#mi': {frets:[2,4,4,2,2,2], fingers:[1,3,4,1,1,1], barre:2},
+  'Gb':   {frets:[2,4,4,3,2,2], fingers:[1,3,4,2,1,1], barre:2},
+  'G':    {frets:[3,2,0,0,0,3], fingers:[2,1,0,0,0,3]},
+  'G7':   {frets:[3,2,0,0,0,1], fingers:[3,2,0,0,0,1]},
+  'Gm':   {frets:[3,5,5,3,3,3], fingers:[1,3,4,1,1,1], barre:3},
+  'Gmaj7':{frets:[3,2,0,0,0,2], fingers:[3,1,0,0,0,2]},
+  'G#':   {frets:[4,6,6,5,4,4], fingers:[1,3,4,2,1,1], barre:4},
+  'Ab':   {frets:[4,6,6,5,4,4], fingers:[1,3,4,2,1,1], barre:4},
+  'A':    {frets:[-1,0,2,2,2,0], fingers:[0,0,2,3,4,0]},
+  'A7':   {frets:[-1,0,2,0,2,0], fingers:[0,0,2,0,3,0]},
+  'Am':   {frets:[-1,0,2,2,1,0], fingers:[0,0,2,3,1,0]},
+  'Ami':  {frets:[-1,0,2,2,1,0], fingers:[0,0,2,3,1,0]},
+  'Am7':  {frets:[-1,0,2,0,1,0], fingers:[0,0,2,0,1,0]},
+  'Amaj7':{frets:[-1,0,2,1,2,0], fingers:[0,0,3,1,2,0]},
+  'A#':   {frets:[-1,1,3,3,3,1], fingers:[0,1,2,3,4,1], barre:1},
+  'Bb':   {frets:[-1,1,3,3,3,1], fingers:[0,1,2,3,4,1], barre:1},
+  'Bbm':  {frets:[-1,1,3,3,2,1], fingers:[0,1,3,4,2,1], barre:1},
+  'B':    {frets:[-1,2,4,4,4,2], fingers:[0,1,2,3,4,1], barre:2},
+  'B7':   {frets:[-1,2,1,2,0,2], fingers:[0,2,1,3,0,4]},
+  'Bm':   {frets:[-1,2,4,4,3,2], fingers:[0,1,3,4,2,1], barre:2},
+  'Bmi':  {frets:[-1,2,4,4,3,2], fingers:[0,1,3,4,2,1], barre:2},
+  'E7sus4':{frets:[0,2,0,2,0,0], fingers:[0,2,0,3,0,0]},
+  'Asus4':{frets:[-1,0,2,2,3,0], fingers:[0,0,1,2,3,0]},
+  'Dsus4':{frets:[-1,-1,0,2,3,3], fingers:[0,0,0,1,2,3]},
+  'Dsus2':{frets:[-1,-1,0,2,3,0], fingers:[0,0,0,1,2,0]},
+};
+
+// Normalize chord name: strip bass note, unify notation
+function normalizeChordName(chord) {
+  let c = chord.split('/')[0].trim();
+  return c;
+}
+
+function renderChordSVG(shape) {
+  const {frets, fingers, barre} = shape;
+  const W = 120, H = 150, nS = 6, nF = 5;
+  const left = 20, top = 28, fw = (W-left-10)/(nS-1), fh = (H-top-14)/nF;
+  let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  // Nut (thick top line)
+  svg += `<rect x="${left}" y="${top}" width="${fw*(nS-1)}" height="3" fill="#F2F2F2"/>`;
+  // Frets
+  for (let f=1; f<=nF; f++) {
+    svg += `<line x1="${left}" y1="${top+fh*f}" x2="${left+fw*(nS-1)}" y2="${top+fh*f}" stroke="#555" stroke-width="1"/>`;
+  }
+  // Strings
+  for (let s=0; s<nS; s++) {
+    svg += `<line x1="${left+fw*s}" y1="${top}" x2="${left+fw*s}" y2="${top+fh*nF}" stroke="#555" stroke-width="1"/>`;
+  }
+  // Barre
+  if (barre) {
+    // find leftmost and rightmost string at barre fret
+    let first=-1, lastS=-1;
+    for (let s=0;s<nS;s++){ if(frets[s]===barre){ if(first<0)first=s; lastS=s; } }
+    if (first>=0) {
+      const y = top+fh*(barre-0.5);
+      svg += `<rect x="${left+fw*first-6}" y="${y-6}" width="${fw*(lastS-first)+12}" height="12" rx="6" fill="var(--accent)"/>`;
+    }
+  }
+  // Dots + open/mute markers
+  for (let s=0; s<nS; s++) {
+    const fr = frets[s];
+    const x = left + fw*s;
+    if (fr === -1) {
+      svg += `<text x="${x}" y="${top-8}" fill="#E05555" font-size="13" text-anchor="middle" font-family="monospace">✕</text>`;
+    } else if (fr === 0) {
+      svg += `<circle cx="${x}" cy="${top-12}" r="5" fill="none" stroke="#4CAF7D" stroke-width="1.5"/>`;
+    } else {
+      const y = top + fh*(fr-0.5);
+      svg += `<circle cx="${x}" cy="${y}" r="8" fill="var(--accent)"/>`;
+      if (fingers && fingers[s]>0) {
+        svg += `<text x="${x}" y="${y+4}" fill="#0F0F0F" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">${fingers[s]}</text>`;
+      }
+    }
+  }
+  svg += `</svg>`;
+  return svg;
+}
+
+function showChordDiagram(chord) {
+  const norm = normalizeChordName(chord);
+  const popup = document.getElementById('chordPopup');
+  const body = document.getElementById('chordPopupBody');
+  const title = document.getElementById('chordPopupTitle');
+  title.textContent = chord;
+  const shape = CHORD_SHAPES[norm];
+  if (shape) {
+    body.innerHTML = renderChordSVG(shape);
+  } else {
+    body.innerHTML = `<div style="color:var(--muted);font-size:0.9rem;padding:30px 10px;text-align:center">Prstoklad pre <strong style="color:var(--accent)">${escHtml(chord)}</strong> nie je v databáze.</div>`;
+  }
+  popup.classList.add('open');
+}
+
+function closeChordPopup() {
+  document.getElementById('chordPopup').classList.remove('open');
+}
+
+function wrapChords(line) {
+  // Wrap each chord token in a clickable span, preserving exact spacing
+  const chordRe = /\b[A-G][#b]?(?:maj7?|min7?|mi|m(?:aj)?(?:6|7|9|11|13)?|aug|dim7?|(?:\d)?sus[24]?|sus[24]?|add(?:9|11)?|[679]|11|13)?(?:\/[A-G][#b]?)?\b/g;
+  let result = '';
+  let last = 0;
+  let m;
+  while ((m = chordRe.exec(line)) !== null) {
+    result += escHtml(line.slice(last, m.index));
+    const chord = m[0];
+    result += `<span class="chord-clickable" onclick="showChordDiagram('${chord.replace(/'/g, "\\'")}');event.stopPropagation()">${escHtml(chord)}</span>`;
+    last = m.index + chord.length;
+  }
+  result += escHtml(line.slice(last));
+  return result;
+}
+
 function renderChordSheet(rawText) {
   if (!rawText || rawText === '(Žiadne akordy)') return '<span style="color:var(--muted);font-style:italic">Žiadne akordy</span>';
   
@@ -1793,11 +1996,11 @@ function renderChordSheet(rawText) {
       const nextLine = lines[i + 1];
       if (nextLine !== undefined && nextLine.trim() && !isChordLine(nextLine) && !/^\[.+\]$/.test(nextLine.trim())) {
         // Paired: chord line above, lyrics below
-        html += `<span class="cs-line"><span class="cs-line-chords">${escHtml(line)}</span><span class="cs-line-lyrics">${escHtml(nextLine)}</span></span>`;
+        html += `<span class="cs-line"><span class="cs-line-chords">${wrapChords(line)}</span><span class="cs-line-lyrics">${escHtml(nextLine)}</span></span>`;
         i += 2;
       } else {
         // Chord-only line (no lyrics follow)
-        html += `<span class="cs-chord-only">${escHtml(line)}</span>`;
+        html += `<span class="cs-chord-only">${wrapChords(line)}</span>`;
         i++;
       }
       continue;
