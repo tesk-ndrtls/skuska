@@ -472,6 +472,7 @@
     white-space: pre;
     pointer-events: none;
   }
+  .cs-line-chords .chord-clickable { pointer-events: auto; }
   /* Chord-only lines */
   .cs-chord-only {
     display: block;
@@ -545,10 +546,12 @@
     cursor: pointer;
     border-radius: 3px;
     transition: background 0.12s;
+    border-bottom: 1px dotted rgba(245,197,24,0.5);
   }
   .chord-clickable:hover, .chord-clickable:active {
     background: var(--accent);
     color: #0F0F0F !important;
+    border-bottom-color: transparent;
   }
 
   /* CHORD POPUP */
@@ -693,19 +696,26 @@
 
 
   /* CHAT */
-  .chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 180px); min-height: 400px; }
+  .chat-wrap {
+    display: flex; flex-direction: column;
+    height: calc(100dvh - 200px);
+    min-height: 300px;
+    max-height: 800px;
+  }
   .chat-messages {
     flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
     padding: 16px; background: var(--panel); border: 1px solid var(--border);
     border-radius: 12px 12px 0 0;
+    -webkit-overflow-scrolling: touch;
   }
   .chat-msg { display: flex; gap: 10px; align-items: flex-start; }
   .chat-msg.mine { flex-direction: row-reverse; }
   .chat-msg .avatar { flex-shrink: 0; width: 28px; height: 28px; font-size: 0.75rem; }
   .chat-bubble {
     background: var(--panel2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 8px 12px; max-width: 75%;
-    font-size: 0.87rem; line-height: 1.5;
+    border-radius: 10px; padding: 8px 12px; max-width: 78%;
+    font-size: 0.92rem; line-height: 1.5;
+    word-break: break-word; overflow-wrap: anywhere;
   }
   .chat-msg.mine .chat-bubble { background: var(--accent-dim); border-color: rgba(245,197,24,0.2); }
   .chat-meta { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
@@ -719,9 +729,9 @@
   }
   .chat-input {
     flex: 1; background: var(--panel2); border: 1px solid var(--border);
-    color: var(--text); padding: 8px 12px; border-radius: 8px;
-    font-family: 'Special Elite', 'JetBrains Mono', monospace; font-size: 0.88rem; outline: none;
-    transition: border-color 0.15s;
+    color: var(--text); padding: 10px 12px; border-radius: 8px;
+    font-family: 'Special Elite', 'JetBrains Mono', monospace; font-size: 16px; outline: none;
+    transition: border-color 0.15s; min-width: 0;
   }
   .chat-input:focus { border-color: var(--accent); }
   .chat-empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 0.88rem; }
@@ -750,7 +760,7 @@
     .nav-btn .nav-icon { font-size: 1.2rem; }
     .section-title { font-size: 1.2rem; }
     .modal { margin: 8px 0; max-height: calc(100vh - 16px); }
-    .chat-wrap { height: calc(100vh - 200px); }
+    .chat-wrap { height: calc(100dvh - 210px); max-height: none; }
     .vote-chip { font-size: 0.68rem; padding: 2px 6px; }
   }
 </style>
@@ -841,23 +851,8 @@
       <div class="empty-sub">Pridaj prvú pesničku s akordmi</div>
     </div>
   </div>
-
-</main>
-
-<footer style="text-align:center;padding:24px 16px 40px;color:#555;font-size:0.72rem;font-family:'JetBrains Mono',monospace">
-  Kvašung v1.9.0 · <span style="color:#444">made for the band</span>
-</footer>
-
-
-
   <!-- ===== CHAT VIEW ===== -->
   <div class="view" id="view-chat">
-    <div class="section-header">
-      <div>
-        <div class="section-title">Chat</div>
-        <div class="section-sub">Komunikácia pre kapelu</div>
-      </div>
-    </div>
     <div class="chat-wrap">
       <div class="chat-messages" id="chatMessages">
         <div class="chat-empty" id="chatEmpty">Zatiaľ žiadne správy. Napíš prvý! 🎸</div>
@@ -868,6 +863,12 @@
       </div>
     </div>
   </div>
+
+</main>
+
+<footer style="text-align:center;padding:24px 16px 40px;color:#555;font-size:0.72rem;font-family:'JetBrains Mono',monospace">
+  Kvašung v1.9.1 · <span style="color:#444">made for the band</span>
+</footer>
 
 <!-- ===== SONG DETAIL MODAL ===== -->
 <div class="modal-overlay" id="songModal">
@@ -1653,7 +1654,7 @@ function sliderToPixPerSec(val) {
   return 4 * Math.pow(30, (val - 1) / 19);
 }
 
-const APP_VERSION = "v1.9.0";
+const APP_VERSION = "v1.9.1";
 
 // ==================== DEVICE ID (for per-device settings) ====================
 function getDeviceId() {
