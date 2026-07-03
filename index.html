@@ -844,6 +844,11 @@
 
 </main>
 
+<footer style="text-align:center;padding:24px 16px 40px;color:#555;font-size:0.72rem;font-family:'JetBrains Mono',monospace">
+  Kvašung v1.9.0 · <span style="color:#444">made for the band</span>
+</footer>
+
+
 
   <!-- ===== CHAT VIEW ===== -->
   <div class="view" id="view-chat">
@@ -1321,11 +1326,12 @@ function confirmSession(id) {
   showToast(s.status === 'confirmed' ? 'Skúška potvrdená ✓' : 'Vrátené na návrh', 'success');
   syncToSupabase('sessions');
 }
-function deleteSession(id) {
+async function deleteSession(id) {
   if (!confirm('Zmazať termín?')) return;
-  sessions = sessions.filter(x => x.id !== id);
-  saveLocal(); renderSessions(); showToast('Termín zmazaný', 'error');
-  deleteFromSupabase('sessions', id);
+  sessions = sessions.filter(x => String(x.id) !== String(id));
+  saveLocal(); renderSessions();
+  const ok = await deleteFromSupabase('sessions', id);
+  showToast(ok ? 'Termín zmazaný ✓' : 'Zmazané lokálne (sync zlyhal)', ok ? 'success' : 'error');
 }
 
 
@@ -1580,7 +1586,7 @@ function openSongById(id) {
   // YouTube embed
   const ytId = extractYouTubeId(s.youtube || '');
   if (ytId) infoParts.push(`<div class="yt-embed"><span style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:8px">Video</span><iframe src="https://www.youtube.com/embed/${ytId}" allowfullscreen loading="lazy"></iframe></div>`);
-  infoParts.push(`<div style="margin-top:16px;font-size:0.75rem;color:#444">Pridané: ${s.created_by || '?'} · Upravené: ${s.updated_by || '?'}</div>`);
+  infoParts.push(`<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:0.8rem;color:var(--muted)">👤 Pridal: <strong style="color:var(--text)">${escHtml(s.created_by || '?')}</strong>${s.updated_by && s.updated_by !== s.created_by ? ` · Upravil: <strong style="color:var(--text)">${escHtml(s.updated_by)}</strong>` : ''}</div>`);
   document.getElementById('infoDisplay').innerHTML = infoParts.join('') || '<span style="color:var(--muted)">Žiadne info</span>';
 
   // Reset to chords tab
@@ -1646,6 +1652,8 @@ function sliderToPixPerSec(val) {
   // exponential: f(1)≈4, f(10)≈24, f(20)≈120
   return 4 * Math.pow(30, (val - 1) / 19);
 }
+
+const APP_VERSION = "v1.9.0";
 
 // ==================== DEVICE ID (for per-device settings) ====================
 function getDeviceId() {
@@ -2127,9 +2135,10 @@ async function syncToSupabase(table) {
 }
 
 async function deleteFromSupabase(table, id) {
-  if (!SUPABASE_URL || !SUPABASE_KEY) return;
+  if (!SUPABASE_URL || !SUPABASE_KEY) return true;
   const t = table === 'sessions' ? 'band_sessions' : 'band_songs';
-  await sbFetch(t + '?id=eq.' + id, 'DELETE');
+  const ok = await sbFetch(t + '?id=eq.' + encodeURIComponent(id), 'DELETE');
+  return ok !== null;
 }
 
 // ==================== LOCAL STORAGE ====================
