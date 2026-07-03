@@ -1389,7 +1389,7 @@ function isChordLine(line) {
   const t = line.trim();
   if (!t) return false;
 
-  // Bar/tab format with pipes → definitely chords
+  // Bar/tab format with pipes
   if (t.includes('|')) return true;
 
   // Repeat marker alone (x2, x3)
@@ -1401,16 +1401,22 @@ function isChordLine(line) {
   // Contractions like don't, we're, can't → lyrics
   if (/[a-z]'[a-z]/i.test(t)) return false;
 
-  // Remove all valid chord tokens (incl. Fm6, Am7, E7/G#, sus4, add9)
-  let stripped = t.replace(/\b[A-G][#b]?(?:maj7?|min7?|m(?:aj)?(?:6|7|9|11|13)?|aug|dim7?|sus[24]?|add(?:9|11)?|[679]|11|13)?(?:\/[A-G][#b]?)?\b/g, '');
-  // Remove allowed separators, N.C., repeat markers
-  stripped = stripped.replace(/[\s|.\-#]/g, '').replace(/N\.?C\.?/g, '').replace(/x\d+/gi, '');
+  // Must contain at least one chord token
+  if (!/\b[A-G][#b]?/.test(t)) return false;
+
+  // Remove all valid chord tokens (incl. E7sus4, Fm6, Am7, E7/G#, Fmaj7)
+  let stripped = t.replace(/\b[A-G][#b]?(?:maj7?|min7?|m(?:aj)?(?:6|7|9|11|13)?|aug|dim7?|(?:\d)?sus[24]?|sus[24]?|add(?:9|11)?|[679]|11|13)?(?:\/[A-G][#b]?)?\b/g, '');
+  // Remove repeat markers (x2, x3) BEFORE removing digits
+  stripped = stripped.replace(/\bx\d+\b/gi, '');
+  // Remove cyrillic and non-ASCII (e.g. С in tabs)
+  stripped = stripped.replace(/[^\x00-\x7F]/g, '');
+  // Remove separators, brackets, digits
+  stripped = stripped.replace(/[\s|.\-#/{}()\d]/g, '');
+  // Remove N.C.
+  stripped = stripped.replace(/N\.?C\.?/gi, '');
 
   // Any remaining lowercase → lyrics
   if (/[a-z]/.test(stripped)) return false;
-
-  // Must contain at least one chord token
-  if (!/\b[A-G][#b]?/.test(t)) return false;
 
   return true;
 }
