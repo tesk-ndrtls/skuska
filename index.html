@@ -540,6 +540,13 @@
     flex: 1; accent-color: var(--accent);
     height: 28px; background: transparent; border: none; padding: 0;
   }
+  .fs-playpause {
+    background: var(--accent); border: none; color: #0F0F0F;
+    width: 38px; height: 38px; border-radius: 50%;
+    font-size: 1rem; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fs-playpause:active { transform: scale(0.94); }
 
   /* CLICKABLE CHORDS */
   .chord-clickable {
@@ -867,7 +874,7 @@
 </main>
 
 <footer style="text-align:center;padding:24px 16px 40px;color:#555;font-size:0.72rem;font-family:'JetBrains Mono',monospace">
-  Kvašung v1.9.1 · <span style="color:#444">made for the band</span>
+  Kvašung v1.9.2 · <span style="color:#444">made for the band</span>
 </footer>
 
 <!-- ===== SONG DETAIL MODAL ===== -->
@@ -922,8 +929,9 @@
     <div class="fs-title" id="fsTitle"></div>
     <button class="fs-close" onclick="stopAutoscroll()">✕ Stop</button>
   </div>
-  <div class="fs-content chordsheet" id="fsContent"></div>
+  <div class="fs-content chordsheet" id="fsContent" onclick="toggleScrollPause()"></div>
   <div class="fs-slider-bar">
+    <button class="fs-playpause" id="fsPlayPause" onclick="toggleScrollPause()">⏸</button>
     <span style="font-size:0.8rem;color:var(--muted)">🐢</span>
     <input type="range" id="fsScrollSpeed" min="1" max="20" value="5">
     <span style="font-size:0.8rem;color:var(--muted)">🐇</span>
@@ -1645,6 +1653,8 @@ function isChordLine(line) {
 // ==================== AUTOSCROLL ====================
 let scrollInterval = null;
 let isScrolling = false;
+let fsOpen = false;       // fullscreen overlay open
+let scrollActive = false; // scrolling currently animating
 let scrollAccum = 0; // sub-pixel accumulator for slow speeds
 
 // Speed curve: exponential so low end is very slow, high end is fast
@@ -1654,7 +1664,7 @@ function sliderToPixPerSec(val) {
   return 4 * Math.pow(30, (val - 1) / 19);
 }
 
-const APP_VERSION = "v1.9.1";
+const APP_VERSION = "v1.9.2";
 
 // ==================== DEVICE ID (for per-device settings) ====================
 function getDeviceId() {
@@ -1682,6 +1692,7 @@ function toggleAutoscroll() {
 
 function enterAutoscrollFullscreen() {
   isScrolling = true;
+  fsOpen = true;
   scrollAccum = 0;
   const modal = document.getElementById('songModal');
   const songId = modal.dataset.songId;
@@ -1703,6 +1714,7 @@ function enterAutoscrollFullscreen() {
   }
   content.innerHTML = renderChordSheet(chords);
   content.style.setProperty('--chord-font', currentFontSize + 'rem');
+  content.scrollTop = 0;
 
   // Restore per-device speed
   const speedEl = document.getElementById('fsScrollSpeed');
@@ -1712,6 +1724,7 @@ function enterAutoscrollFullscreen() {
 
   fs.classList.add('open');
   startAutoscroll();
+  updatePlayPauseIcon();
 }
 
 function startAutoscroll() {
@@ -1722,14 +1735,15 @@ function startAutoscroll() {
     labelEl.textContent = speedEl.value;
     localStorage.setItem('scrollSpeed_' + DEVICE_ID, speedEl.value);
   };
+  scrollActive = true;
   let lastTime = null;
   function frame(ts) {
-    if (!isScrolling) return;
+    if (!scrollActive || !fsOpen) return;
     if (lastTime === null) lastTime = ts;
     const dt = Math.min(ts - lastTime, 100);
     lastTime = ts;
     const body = document.getElementById('fsContent');
-    if (!body) { stopAutoscroll(); return; }
+    if (!body) return;
     const pxPerSec = sliderToPixPerSec(parseFloat(speedEl.value));
     scrollAccum += pxPerSec * dt / 1000;
     const pixels = Math.floor(scrollAccum);
@@ -1737,15 +1751,44 @@ function startAutoscroll() {
       body.scrollTop += pixels;
       scrollAccum -= pixels;
     }
-    if (body.scrollTop + body.clientHeight >= body.scrollHeight - 10) {
-      stopAutoscroll(); return;
+    // At the end: pause scrolling but keep fullscreen open
+    if (body.scrollTop + body.clientHeight >= body.scrollHeight - 2) {
+      scrollActive = false;
+      updatePlayPauseIcon();
+      return;
     }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 }
 
+// Tap the content to resume/pause scrolling (after it reaches the end or to pause)
+function toggleScrollPause() {
+  if (!fsOpen) return;
+  const body = document.getElementById('fsContent');
+  if (scrollActive) {
+    scrollActive = false;
+    updatePlayPauseIcon();
+  } else {
+    // If at bottom, restart from top
+    if (body.scrollTop + body.clientHeight >= body.scrollHeight - 5) {
+      body.scrollTop = 0;
+    }
+    scrollAccum = 0;
+    startAutoscroll();
+    updatePlayPauseIcon();
+  }
+}
+
+function updatePlayPauseIcon() {
+  const btn = document.getElementById('fsPlayPause');
+  if (btn) btn.textContent = scrollActive ? '⏸' : '▶';
+}
+
+// Close fullscreen entirely (only via Stop button)
 function stopAutoscroll() {
+  scrollActive = false;
+  fsOpen = false;
   isScrolling = false;
   const fs = document.getElementById('autoscrollFullscreen');
   if (fs) fs.classList.remove('open');
