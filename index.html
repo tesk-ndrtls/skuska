@@ -966,7 +966,7 @@
 </main>
 
 <footer style="text-align:center;padding:24px 16px 40px;color:#555;font-size:0.72rem;font-family:'JetBrains Mono',monospace">
-  Kvašung v1.11.0 · <span style="color:#444">made for the band</span>
+  Kvašung v1.12.0 · <span style="color:#444">made for the band</span>
 </footer>
 
 <!-- ===== SONG DETAIL MODAL ===== -->
@@ -1266,6 +1266,10 @@ let editingSongId = null;
 // ==================== INIT ====================
 function init() {
   document.getElementById('setupBanner').style.display = 'none';
+
+  // Handle magic-link vote from email BEFORE anything else
+  handleMagicLinkVote();
+
   if (myName) {
     document.getElementById('nameModal').classList.remove('open');
     updateHeader();
@@ -1283,6 +1287,43 @@ function init() {
   document.getElementById('fDate').value = today.toISOString().slice(0,10);
 
   restoreTab();
+}
+
+// Process ?vote=yes&session=<id>&member=<name> from email magic links
+async function handleMagicLinkVote() {
+  const params = new URLSearchParams(window.location.search);
+  const vote = params.get('vote');
+  const sessionId = params.get('session');
+  const member = params.get('member');
+  if (!vote || !sessionId || !member) return;
+  if (!['yes','no','maybe'].includes(vote)) return;
+
+  // Set this member as the current user (so they see their own view after)
+  myName = member;
+  localStorage.setItem('bandMyName', myName);
+
+  // Make sure we have the latest sessions from Supabase
+  const sbSessions = await sbFetch('band_sessions?select=*&id=eq.' + encodeURIComponent(sessionId));
+  if (sbSessions && sbSessions.length) {
+    // Merge into local
+    const idx = sessions.findIndex(x => String(x.id) === String(sessionId));
+    if (idx === -1) sessions.push(sbSessions[0]);
+    else sessions[idx] = sbSessions[0];
+  }
+
+  const s = sessions.find(x => String(x.id) === String(sessionId));
+  if (s) {
+    if (!s.votes) s.votes = {};
+    s.votes[member] = vote;
+    saveLocal();
+    // Push just this session up
+    await sbFetch('band_sessions', 'POST', [s], { 'Prefer': 'resolution=merge-duplicates,return=minimal' });
+    const label = vote === 'yes' ? 'Ideš na skúšku ✓' : vote === 'maybe' ? 'Možno prídeš ~' : 'Nejdeš na skúšku ✕';
+    setTimeout(() => showToast(label + ' (' + member + ')', 'success'), 400);
+  }
+
+  // Clean the URL so refresh doesn't re-vote
+  window.history.replaceState({}, '', window.location.pathname);
 }
 
 function pickMember(name) {
@@ -1792,7 +1833,7 @@ function sliderToPixPerSec(val) {
   return 4 * Math.pow(30, (val - 1) / 19);
 }
 
-const APP_VERSION = "v1.11.0";
+const APP_VERSION = "v1.12.0";
 
 // ==================== DEVICE ID (for per-device settings) ====================
 function getDeviceId() {
