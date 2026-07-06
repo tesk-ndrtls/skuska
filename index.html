@@ -178,23 +178,41 @@
   .card:hover { border-color: #3E3E3E; }
 
   /* SESSION CARDS */
-  .session-grid { display: flex; flex-direction: column; gap: 12px; }
-  .session-card {
+  .session-grid { display: flex; flex-direction: column; gap: 14px; }
+  .session-card-wrap {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 18px 20px;
+    overflow: hidden;
+  }
+  .session-card {
+    padding: 16px 18px;
     display: grid;
-    grid-template-columns: 90px 1fr auto;
-    gap: 16px;
+    grid-template-columns: 72px 1fr auto;
+    gap: 14px;
     align-items: center;
-    transition: border-color 0.15s;
+    transition: background 0.15s;
     cursor: pointer;
   }
-  .session-card:hover { border-color: #3E3E3E; }
-  .session-card.confirmed { border-left: 3px solid var(--success); }
-  .session-card.proposed { border-left: 3px solid var(--accent); }
-  .session-card.cancelled { border-left: 3px solid var(--danger); opacity: 0.6; }
+  .session-card:hover { background: var(--panel2); }
+  .session-card-wrap:has(.session-card.confirmed) { border-left: 3px solid var(--success); }
+  .session-card-wrap:has(.session-card.proposed) { border-left: 3px solid var(--accent); }
+  .session-card-wrap:has(.session-card.cancelled) { border-left: 3px solid var(--danger); opacity: 0.65; }
+  .session-chevron { color: var(--muted); font-size: 1.2rem; align-self: center; }
+
+  .session-status-line { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .attend-count { font-size: 0.82rem; color: var(--success); font-weight: 600; }
+
+  /* ATTENDANCE BAR - primary action, always visible */
+  .attend-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px;
+    background: var(--panel2);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .attend-q { font-size: 0.9rem; font-weight: 600; color: var(--text); flex-shrink: 0; }
+  .attend-btns { display: flex; gap: 6px; flex: 1; min-width: 180px; }
 
   .session-date-block {
     text-align: center;
@@ -244,27 +262,30 @@
   .badge-cancelled { background: rgba(224,85,85,0.12); color: var(--danger); }
 
   /* MY VOTE BUTTONS */
-  .my-vote-row { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
   .vote-btn {
-    flex: 1; padding: 7px; border-radius: 7px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); font-size: 0.8rem; font-weight: 600;
+    flex: 1; padding: 9px 6px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--muted); font-size: 0.85rem; font-weight: 600;
     cursor: pointer; transition: all 0.15s; font-family: 'Special Elite', 'JetBrains Mono', monospace;
-    display: flex; align-items: center; justify-content: center; gap: 5px;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
   }
   .vote-btn:hover { border-color: #444; color: var(--text); }
-  .vote-btn.active-yes { background: rgba(76,175,125,0.15); border-color: var(--success); color: var(--success); }
-  .vote-btn.active-no { background: rgba(224,85,85,0.1); border-color: var(--danger); color: var(--danger); }
-  .vote-btn.active-maybe { background: rgba(245,197,24,0.12); border-color: var(--accent); color: var(--accent); }
+  .vote-btn.active-yes { background: rgba(76,175,125,0.2); border-color: var(--success); color: var(--success); }
+  .vote-btn.active-no { background: rgba(224,85,85,0.15); border-color: var(--danger); color: var(--danger); }
+  .vote-btn.active-maybe { background: rgba(245,197,24,0.15); border-color: var(--accent); color: var(--accent); }
+
+  /* EXPAND SECTIONS */
+  .expand-section { margin-bottom: 14px; }
+  .expand-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+  .expand-admin { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border); }
 
   /* SESSION EXPAND */
   .session-expand {
     display: none;
-    padding: 0 20px 18px;
+    padding: 16px 18px;
     border-top: 1px solid var(--border);
-    margin-top: 0;
+    background: var(--bg);
   }
   .session-expand.open { display: block; }
-  .setlist-section { margin-top: 14px; }
   .setlist-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 8px; }
   .setlist-items { display: flex; flex-wrap: wrap; gap: 6px; }
   .setlist-pill {
@@ -945,7 +966,7 @@
 </main>
 
 <footer style="text-align:center;padding:24px 16px 40px;color:#555;font-size:0.72rem;font-family:'JetBrains Mono',monospace">
-  Kvašung v1.10.0 · <span style="color:#444">made for the band</span>
+  Kvašung v1.11.0 · <span style="color:#444">made for the band</span>
 </footer>
 
 <!-- ===== SONG DETAIL MODAL ===== -->
@@ -1320,9 +1341,12 @@ function renderSessions() {
     const month = d.toLocaleString('sk-SK', {month:'short'});
     const status = s.status || 'proposed';
     const votes = s.votes || {};
-
-    // Build vote chips for all 5 members - full names
     const members = getKnownMembers();
+
+    // Count attendance
+    const yesCount = members.filter(m => votes[m] === 'yes').length;
+
+    // Vote chips for all members
     const voteDots = members.map(m => {
       const v = votes[m];
       const cl = v === 'yes' ? 'yes' : v === 'no' ? 'no' : v === 'maybe' ? 'maybe' : 'empty';
@@ -1336,49 +1360,58 @@ function renderSessions() {
     const setlistSongs = (s.setlist || []).map(sid => {
       const song = songs.find(x => x.id === sid);
       if (!song) return '';
-      return `<span class="setlist-pill" onclick="openSongById('${sid}');event.stopPropagation()">${song.title}</span>`;
+      return `<span class="setlist-pill" onclick="openSongById('${sid}');event.stopPropagation()">${escHtml(song.title)}</span>`;
     }).join('');
 
     return `
-    <div>
+    <div class="session-card-wrap">
       <div class="session-card ${status}" onclick="toggleExpand('exp-${s.id}')">
         <div class="session-date-block">
           <div class="session-day">${day}</div>
           <div class="session-month">${month}</div>
         </div>
         <div class="session-info">
-          <div class="session-name">${s.title || s.note || formatDateLong(new Date(s.date + 'T' + (s.time||'19:00')))}</div>
+          <div class="session-name">${escHtml(s.title || s.note || formatDateLong(d))}</div>
           <div class="session-meta">
             <span class="session-tag">🕐 ${s.time || '19:00'}</span>
-            <span class="session-tag">📍 ${s.venue || 'Skúšobňa'}</span>
-            ${s.note ? `<span class="session-tag">📝 ${s.note}</span>` : ''}
+            <span class="session-tag">📍 ${escHtml(s.venue || 'Skúšobňa')}</span>
           </div>
-          <div class="session-votes">${voteDots}</div>
+          <div class="session-status-line">
+            ${status === 'confirmed' ? '<span class="status-badge badge-confirmed">✓ Potvrdená</span>' : status === 'cancelled' ? '<span class="status-badge badge-cancelled">✕ Zrušená</span>' : '<span class="status-badge badge-proposed">● Navrhovaná</span>'}
+            <span class="attend-count">👥 ${yesCount}/${members.length} idú</span>
+          </div>
         </div>
-        <div class="session-actions">
-          <span class="status-badge badge-${status}">${status === 'confirmed' ? '✓ Potvrdená' : status === 'cancelled' ? '✕ Zrušená' : '● Návrh'}</span>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
-            <button class="btn btn-ghost btn-sm" onclick="confirmSession('${s.id}');event.stopPropagation()">${status === 'confirmed' ? '↩ Zrušiť potvrdenie' : '✓ Potvrdiť'}</button>
-            <button class="btn btn-ghost btn-sm" onclick="openEditSession('${s.id}');event.stopPropagation()">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteSession('${s.id}');event.stopPropagation()">✕</button>
-          </div>
+        <div class="session-chevron" id="chev-${s.id}">▾</div>
+      </div>
+
+      <!-- Primary: my attendance (always visible) -->
+      <div class="attend-bar">
+        <span class="attend-q">Idem na skúšku?</span>
+        <div class="attend-btns">
+          <button class="vote-btn ${myVote==='yes'?'active-yes':''}" onclick="vote('${s.id}','yes')">✓ Idem</button>
+          <button class="vote-btn ${myVote==='maybe'?'active-maybe':''}" onclick="vote('${s.id}','maybe')">~ Možno</button>
+          <button class="vote-btn ${myVote==='no'?'active-no':''}" onclick="vote('${s.id}','no')">✕ Nejdem</button>
         </div>
       </div>
+
+      <!-- Expandable: who's coming + setlist + admin -->
       <div class="session-expand" id="exp-${s.id}">
-        <div class="my-vote-row">
-          <span style="font-size:0.78rem;color:var(--muted);margin-right:4px;align-self:center">Môžeš prísť?</span>
-          <button class="vote-btn ${myVote==='yes'?'active-yes':''}" onclick="vote('${s.id}','yes')">✓ Áno</button>
-          <button class="vote-btn ${myVote==='maybe'?'active-maybe':''}" onclick="vote('${s.id}','maybe')">? Možno</button>
-          <button class="vote-btn ${myVote==='no'?'active-no':''}" onclick="vote('${s.id}','no')">✕ Nie</button>
+        <div class="expand-section">
+          <div class="expand-label">Kto ide</div>
+          <div class="session-votes">${voteDots}</div>
         </div>
-        ${setlistSongs || songs.length ? `
-        <div class="setlist-section">
-          <div class="setlist-title">Setlist</div>
+        <div class="expand-section">
+          <div class="expand-label">Setlist</div>
           <div class="setlist-items">
             ${setlistSongs}
             <span class="setlist-pill" style="border-style:dashed;color:var(--muted)" onclick="openSetlistPicker('${s.id}');event.stopPropagation()">+ Pridať pesničku</span>
           </div>
-        </div>` : ''}
+        </div>
+        <div class="expand-admin">
+          <button class="btn btn-ghost btn-sm" onclick="confirmSession('${s.id}');event.stopPropagation()">${status === 'confirmed' ? '↩ Späť na návrh' : '✓ Potvrdiť skúšku'}</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditSession('${s.id}');event.stopPropagation()">✏️ Upraviť</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSession('${s.id}');event.stopPropagation()">🗑 Zmazať</button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1387,6 +1420,9 @@ function renderSessions() {
 function toggleExpand(id) {
   const el = document.getElementById(id);
   el.classList.toggle('open');
+  const chevId = id.replace('exp-', 'chev-');
+  const chev = document.getElementById(chevId);
+  if (chev) chev.textContent = el.classList.contains('open') ? '▴' : '▾';
 }
 
 function formatDateLong(d) {
@@ -1756,7 +1792,7 @@ function sliderToPixPerSec(val) {
   return 4 * Math.pow(30, (val - 1) / 19);
 }
 
-const APP_VERSION = "v1.10.0";
+const APP_VERSION = "v1.11.0";
 
 // ==================== DEVICE ID (for per-device settings) ====================
 function getDeviceId() {
@@ -1837,8 +1873,15 @@ function enterAutoscrollFullscreen() {
   fs.classList.add('open');
   updatePlayPauseIcon();
 
+  // Always reset to top when entering
+  content.scrollTop = 0;
+  scrollAccum = 0;
+
   // Start with countdown (4 beats at song tempo)
   startCountdown(() => {
+    // Ensure we're at the very top when scrolling begins
+    content.scrollTop = 0;
+    scrollAccum = 0;
     startAutoscroll();
     updatePlayPauseIcon();
   });
