@@ -3,488 +3,485 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Schody k vírivke — 3D model</title>
+<title>Schody k vírivke — 2 stupne — 3D model</title>
 <style>
   :root{
     --bg:#0d1116; --panel:#161b21; --line:#252d36; --line2:#333e4a;
     --txt:#c9d3dc; --dim:#7b8896; --acc:#f2a63b; --acc2:#4fb3d9;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;width:100%;overflow:hidden;background:var(--bg)}
-  body{
-    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
-    color:var(--txt);display:flex;flex-direction:column;
-  }
-  header{flex:0 0 auto;background:var(--panel);border-bottom:1px solid var(--line);padding:9px 10px 8px}
-  .titlerow{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:8px}
-  .titlerow h1{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
-  .titlerow .meta{font-size:9.5px;letter-spacing:.08em;color:var(--dim)}
-  .titlerow .meta b{color:var(--acc);font-weight:600}
-  .toolbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-  .sep{width:1px;height:18px;background:var(--line2);margin:0 4px}
+  html,body{background:#0d1116;overflow:hidden}
+  body{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;color:#c9d3dc}
+
+  #wrap{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden}
+  #head{position:absolute;top:0;left:0;width:100%;background:#161b21;border-bottom:1px solid #252d36;padding:9px 10px 8px;z-index:3}
+  #stage{position:absolute;left:0;top:0;overflow:hidden;background:#0d1116}
+  #drawer{position:absolute;left:0;bottom:0;background:#161b21;border-top:1px solid #252d36;z-index:2;overflow:hidden}
+
+  .titlerow{display:block;margin-bottom:8px}
+  .titlerow h1{display:inline;font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+  .titlerow .meta{display:inline;font-size:9.5px;letter-spacing:.08em;color:#7b8896;margin-left:8px}
+  .titlerow .meta b{color:#f2a63b;font-weight:600}
+  .toolbar{white-space:normal;line-height:2.1}
+  .sep{display:inline-block;width:1px;height:13px;background:#333e4a;margin:0 4px;vertical-align:middle}
   button.tb{
-    font:inherit;font-size:10.5px;letter-spacing:.05em;background:#1d242c;color:var(--txt);
-    border:1px solid var(--line2);padding:7px 9px;border-radius:2px;cursor:pointer;transition:.13s;
+    font:inherit;font-size:10.5px;letter-spacing:.05em;background:#1d242c;color:#c9d3dc;
+    border:1px solid #333e4a;padding:6px 8px;border-radius:2px;cursor:pointer;margin-right:3px;
   }
-  button.tb:hover{border-color:var(--acc);color:#fff}
-  button.tb:focus-visible{outline:2px solid var(--acc2);outline-offset:1px}
-  button.tb.on{background:var(--acc);border-color:var(--acc);color:#171003;font-weight:600}
+  button.tb.on{background:#f2a63b;border-color:#f2a63b;color:#171003;font-weight:600}
+  button.tb:focus-visible{outline:2px solid #4fb3d9;outline-offset:1px}
 
-  #stage{flex:1 1 auto;position:relative;min-height:0;min-width:0;overflow:hidden}
-  #c{display:block;width:100%;height:100%;touch-action:none}
-  #readout{
-    position:absolute;left:10px;top:10px;pointer-events:none;font-size:10px;
-    letter-spacing:.05em;line-height:1.6;color:var(--dim);text-shadow:0 1px 3px #000;
-  }
-  #readout .nm{color:var(--acc);font-weight:600;letter-spacing:.09em}
-  #hint{
-    position:absolute;left:10px;bottom:8px;pointer-events:none;font-size:9px;
-    letter-spacing:.08em;color:#4a5561;line-height:1.7;
-  }
+  #c{display:block;position:absolute;left:0;top:0}
+  #readout{position:absolute;left:10px;top:9px;font-size:10px;line-height:1.6;color:#7b8896;
+    text-shadow:0 1px 3px #000;pointer-events:none;z-index:2}
+  #readout .nm{color:#f2a63b;font-weight:600;letter-spacing:.09em}
+  #hint{position:absolute;left:10px;bottom:7px;font-size:9px;letter-spacing:.07em;color:#4a5561;
+    line-height:1.7;pointer-events:none;z-index:2}
 
-  #drawer{flex:0 0 auto;background:var(--panel);border-top:1px solid var(--line);display:flex;flex-direction:column;max-height:42vh}
-  #drawer .head{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;cursor:pointer}
-  #drawer .head span{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
-  #drawer .head .chev{color:var(--acc);font-size:11px;transition:transform .2s}
-  #drawer.closed .chev{transform:rotate(180deg)}
-  #drawer.closed .body{display:none}
-  .body{overflow-y:auto;-webkit-overflow-scrolling:touch;border-top:1px solid var(--line)}
+  #dhead{padding:9px 11px;cursor:pointer;border-bottom:1px solid #252d36}
+  #dhead .t{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:#7b8896}
+  #dhead .chev{float:right;color:#f2a63b;font-size:11px}
+  #dbody{overflow-y:auto;-webkit-overflow-scrolling:touch}
   table{width:100%;border-collapse:collapse;font-size:10.5px}
-  thead th{
-    position:sticky;top:0;background:var(--panel);font-size:9px;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--dim);font-weight:500;text-align:left;
-    padding:7px 10px;border-bottom:1px solid var(--line);
-  }
+  thead th{position:sticky;top:0;background:#161b21;font-size:9px;letter-spacing:.1em;
+    text-transform:uppercase;color:#7b8896;font-weight:500;text-align:left;padding:7px 10px;
+    border-bottom:1px solid #252d36}
   tbody td{padding:7px 10px;border-bottom:1px solid #1b2129;white-space:nowrap}
-  tbody tr{cursor:pointer;transition:background .1s}
-  tbody tr:hover,tbody tr.hot{background:#212a34}
+  tbody tr{cursor:pointer}
+  tbody tr.hot{background:#212a34}
   tbody tr.off{opacity:.32}
-  tbody tr.off td:nth-child(2)::after{content:" · skryté";color:var(--acc);font-size:9px}
-  td.num{text-align:right;color:var(--dim)}
+  td.num{text-align:right;color:#7b8896}
   td.sw{width:5px;padding:0}
   td.sw i{display:block;width:4px;height:24px}
-  tfoot td{padding:9px 10px;font-size:9.5px;color:var(--dim);letter-spacing:.04em;line-height:1.6}
-  tfoot b{color:var(--txt)}
+  tfoot td{padding:9px 10px;font-size:9.5px;color:#7b8896;line-height:1.6}
+  tfoot b{color:#c9d3dc}
 
-  @media (min-width:880px){
-    body{flex-direction:row;flex-wrap:wrap}
-    header{flex:1 0 100%}
-    #stage{flex:1 1 auto}
-    #drawer{flex:0 0 330px;max-height:none;border-top:0;border-left:1px solid var(--line)}
-    #drawer.closed .body{display:block}
-    #drawer .head{cursor:default}
-    #drawer .head .chev{display:none}
+  #err{
+    position:absolute;left:12px;right:12px;top:50%;transform:translateY(-50%);
+    background:#2a1a12;border:1px solid #f2a63b;padding:14px;font-size:11px;
+    line-height:1.7;color:#ffd8a0;z-index:9;display:none;border-radius:3px;
   }
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  #err b{color:#f2a63b;display:block;margin-bottom:6px;letter-spacing:.1em;text-transform:uppercase;font-size:10px}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="titlerow">
-    <h1>Schody k vírivke</h1>
-    <div class="meta">1260 × 860 × 730 mm · 3 stupne à <b>243 mm</b> · kóty v mm</div>
+<div id="wrap">
+  <div id="head">
+    <div class="titlerow">
+      <h1>Schody k vírivke</h1>
+      <span class="meta">600 × 500 × 500 mm · 2 stupne à <b>250 mm</b> · kóty v mm</span>
+    </div>
+    <div class="toolbar">
+      <button class="tb" data-v="iso">ISO</button><button class="tb" data-v="front">Predný</button><button class="tb" data-v="side">Bočný</button><button class="tb" data-v="top">Horný</button><span class="sep"></span><button class="tb on" id="bDim">Kóty</button><button class="tb" id="bWire">Drôtový</button><button class="tb" id="bExp">Rozložiť</button><span class="sep"></span><button class="tb" id="bFit">Vycentrovať</button>
+    </div>
   </div>
-  <div class="toolbar">
-    <button class="tb" data-v="iso">ISO</button>
-    <button class="tb" data-v="front">Predný</button>
-    <button class="tb" data-v="side">Bočný</button>
-    <button class="tb" data-v="top">Horný</button>
-    <span class="sep"></span>
-    <button class="tb on" id="bDim">Kóty</button>
-    <button class="tb" id="bWire">Drôtový</button>
-    <button class="tb" id="bExp">Rozložiť</button>
-    <span class="sep"></span>
-    <button class="tb" id="bFit">Vycentrovať</button>
-  </div>
-</header>
 
-<div id="stage">
-  <canvas id="c"></canvas>
-  <div id="readout"></div>
-  <div id="hint">ťah = otáčanie &nbsp;·&nbsp; dva prsty = posun + priblíženie &nbsp;·&nbsp; dvojklik = reset</div>
+  <div id="stage">
+    <canvas id="c"></canvas>
+    <div id="readout"></div>
+    <div id="hint">ťah = otáčanie · dva prsty = posun a priblíženie · dvojklik = reset</div>
+    <div id="err"><b>Model sa nespustil</b><span id="errmsg"></span></div>
+  </div>
+
+  <div id="drawer">
+    <div id="dhead"><span class="t">Kusovník — klik na riadok diel skryje</span><span class="chev">▾</span></div>
+    <div id="dbody">
+      <table>
+        <thead><tr><th class="sw"></th><th>Diel</th><th class="num">Prierez</th><th class="num">Dĺžka</th><th class="num">Ks</th></tr></thead>
+        <tbody id="bom"></tbody>
+        <tfoot><tr><td colspan="5">
+          Hranol 45×70 spolu ≈ <b>5,2 bm</b> → kúpiť <b>2 × 4000 mm</b><br>
+          Doska 28×120 spolu <b>2,4 bm</b> → kúpiť <b>1 × 4000 mm</b>
+        </td></tr></tfoot>
+      </table>
+    </div>
+  </div>
 </div>
 
-<div id="drawer" class="closed">
-  <div class="head" id="dhead">
-    <span>Kusovník — klik na riadok diel skryje</span>
-    <span class="chev">▾</span>
+<noscript>
+  <div style="padding:24px;color:#ffd8a0;font-family:monospace;line-height:1.8">
+    <b>Javascript je vypnutý.</b><br>Model je vykresľovaný skriptom v tomto súbore.
+    Zapni Javascript v nastaveniach prehliadača a stránku obnov.
   </div>
-  <div class="body">
-    <table>
-      <thead><tr><th class="sw"></th><th>Diel</th><th class="num">Prierez</th><th class="num">Dĺžka</th><th class="num">Ks</th></tr></thead>
-      <tbody id="bom"></tbody>
-      <tfoot><tr><td colspan="5">
-        Hranol 45×70 spolu ≈ <b>13,4 bm</b> → kúpiť <b>4 × 4000 mm</b><br>
-        Doska 28×140 spolu <b>7,6 bm</b> → kúpiť <b>2 × 4000 mm</b>
-      </td></tr></tfoot>
-    </table>
-  </div>
-</div>
+</noscript>
 
 <script>
 (function(){
 "use strict";
 
-/* ═══════════════════════════════════════════════════════════════
-   1. GEOMETRIA  (mm; x = šírka, y = výška, z = hĺbka, z=0 je predok)
-   ═══════════════════════════════════════════════════════════════ */
-var PX = [0, 607.5, 1215];        // ľavý okraj troch bočníc (hrúbka 45)
-var GX = [45, 652.5];             // začiatky priečnych výstuh (dĺžka 562,5)
+/* zobraz akúkoľvek chybu priamo na obrazovke namiesto čiernej plochy */
+function fail(m){
+  try{
+    document.getElementById('errmsg').textContent=m;
+    document.getElementById('err').style.display='block';
+  }catch(e){ document.body.innerHTML='<pre style="color:#fa6;padding:20px">'+m+'</pre>'; }
+}
+window.onerror=function(m,s,l){ fail(m+'  (riadok '+l+')'); };
 
-var GRP = {
-  sane : {c:[138,91,49] , t:"Sane"},
-  post : {c:[164,112,63], t:"Stĺpik"},
-  joist: {c:[192,138,78], t:"Nosník"},
-  brace: {c:[125,106,82], t:"Výstuha"},
-  deck : {c:[216,164,104],t:"Doska"}
+/* ═══════════════ 1. GEOMETRIA (mm) ═══════════════ */
+var PX=[0,555], GX=[45];
+var GRP={
+  sane :{c:[138,91,49]},  post :{c:[164,112,63]}, joist:{c:[192,138,78]},
+  brace:{c:[125,106,82]}, deck :{c:[216,164,104]}
 };
-
-var P = [];
-function add(g,label,x,y,z,dx,dy,dz,ex){
-  P.push({g:g,label:label,x:x,y:y,z:z,dx:dx,dy:dy,dz:dz,ex:ex||[0,0,0]});
+var P=[];
+function add(g,label,x,y,z,dx,dy,dz,ex){P.push({g:g,label:label,x:x,y:y,z:z,dx:dx,dy:dy,dz:dz,ex:ex||[0,0,0]});}
+/* 2 bocnice: lava x 0..45, prava x 555..600 */
+for(var i=0;i<2;i++){
+  var px=PX[i], sx=(i===0?-300:300);
+  add("sane" ,"Sane \u00b7 500"      ,px-12.5,0  ,0  , 70, 45,500,[sx,0,0]);
+  add("post" ,"St\u013apik P1 \u00b7 107" ,px     ,45 ,0  , 45,107, 70,[sx,0,0]);
+  add("post" ,"St\u013apik P2 \u00b7 357" ,px     ,45 ,250, 45,357, 70,[sx,0,0]);
+  add("post" ,"St\u013apik P3 \u00b7 357" ,px     ,45 ,430, 45,357, 70,[sx,0,0]);
+  add("joist","Nosn\u00edk 1 \u00b7 250"  ,px     ,152,0  , 45, 70,250,[sx,150,0]);
+  add("joist","Nosn\u00edk 2 \u00b7 250"  ,px     ,402,250, 45, 70,250,[sx,150,0]);
 }
+/* 3 priecne vystuhy medzi bocnicami, dlzka 510 */
+add("brace","V\u00fdstuha predn\u00e1 \u00b7 510",GX[0], 45,  0,510,70,45,[0,240,0]);
+add("brace","V\u00fdstuha stredn\u00e1 \u00b7 510",GX[0],150,250,510,70,45,[0,240,0]);
+add("brace","V\u00fdstuha zadn\u00e1 \u00b7 510" ,GX[0],150,430,510,70,45,[0,240,0]);
+/* 4 naslapne dosky 28x120, dlzka 600, medzera 10 mm */
+var DK=[[222,0],[222,130],[472,250],[472,380]];
+for(var k=0;k<4;k++)
+  add("deck","Doska "+(((k/2)|0)+1)+"."+(k%2+1)+" \u00b7 600",0,DK[k][0],DK[k][1],600,28,120,[0,400,0]);
 
-for(var i=0;i<3;i++){
-  var px=PX[i], sx=(i-1)*420;
-  add("sane" ,"Sane · 860"        ,px-12.5,0  ,0  , 70 , 45 ,860,[sx,0,0]);
-  add("post" ,"Stĺpik P1 · 100"   ,px     ,45 ,0  , 45 ,100 , 70,[sx,0,0]);
-  add("post" ,"Stĺpik P2 · 344"   ,px     ,45 ,285, 45 ,344 , 70,[sx,0,0]);
-  add("post" ,"Stĺpik P3 · 587"   ,px     ,45 ,570, 45 ,587 , 70,[sx,0,0]);
-  add("post" ,"Stĺpik P4 · 587"   ,px     ,45 ,790, 45 ,587 , 70,[sx,0,0]);
-  add("joist","Nosník 1 · 285"    ,px     ,145,0  , 45 , 70 ,285,[sx,180,0]);
-  add("joist","Nosník 2 · 285"    ,px     ,389,285, 45 , 70 ,285,[sx,180,0]);
-  add("joist","Nosník 3 · 290"    ,px     ,632,570, 45 , 70 ,290,[sx,180,0]);
-}
-for(var g=0;g<2;g++){
-  add("brace","Výstuha rad P2 · 562,5",GX[g],150,285,562.5,70,45,[0,300,0]);
-  add("brace","Výstuha rad P3 · 562,5",GX[g],300,570,562.5,70,45,[0,300,0]);
-  add("brace","Výstuha rad P4 · 562,5",GX[g],300,790,562.5,70,45,[0,300,0]);
-}
-[[215,0],[215,145],[459,285],[459,430],[702,570],[702,720]].forEach(function(d,k){
-  add("deck","Doska "+(((k/2)|0)+1)+"."+(k%2+1)+" · 1260",0,d[0],d[1],1260,28,140,[0,560,0]);
-});
-
-/* kóty: [ax,ay,az, bx,by,bz, ox,oy,oz, text] */
-var DIMS = [
-  [0,0,0,      1260,0,0,     0,-110,-230, "1260"],
-  [1260,0,0,   1260,0,860,   250,-110,0,  "860" ],
-  [0,0,860,    0,730,860,    -270,0,150,  "730" ],
-  [0,0,0,      0,243,0,      -170,0,-170, "243" ],
-  [0,0,285,    0,487,285,    -370,0,-170, "487" ],
-  [0,243,0,    0,243,285,    -170,170,0,  "285" ],
-  [0,487,285,  0,487,570,    -170,170,0,  "285" ],
-  [0,730,570,  0,730,860,    -170,170,0,  "290" ]
+var DIMS=[
+  [0,0,0,    600,0,0,   0,-80,-160,"600"],
+  [600,0,0,  600,0,500, 170,-80,0, "500"],
+  [0,0,500,  0,500,500,-190,0,110, "500"],
+  [0,0,0,    0,250,0,  -120,0,-120,"250"],
+  [0,250,0,  0,250,250,-120,120,0, "250"],
+  [0,500,250,0,500,500,-120,120,0, "250"]
 ];
 
-/* ═══════════════════════════════════════════════════════════════
-   2. VLASTNÝ 3D RENDERER — čisté canvas 2D, žiadne knižnice
-   ═══════════════════════════════════════════════════════════════ */
-var cv=document.getElementById('c'), ctx=cv.getContext('2d');
-var stage=document.getElementById('stage');
+/* ═══════════════ 2. RENDERER (čisté canvas 2D) ═══════════════ */
+var cv=document.getElementById('c');
+var ctx=cv.getContext&&cv.getContext('2d');
+if(!ctx){ fail('Prehliadač nepodporuje canvas 2D.'); return; }
+var stage=document.getElementById('stage'), head=document.getElementById('head'),
+    drawer=document.getElementById('drawer'), dbody=document.getElementById('dbody'),
+    dhead=document.getElementById('dhead'), wrap=document.getElementById('wrap');
+
 var W=0,H=0,dpr=1;
-
-var CX=630, CY=365, CZ=430;                     // stred modelu
+var CX=300,CY=250,CZ=250;
 var VIEWS={iso:[38,26],front:[0,0],side:[90,0],top:[0,88]};
-var rot={a:38,b:26}, rotT={a:38,b:26};          // a = otočenie, b = náklon
-var zoom=1, panX=0, panY=0, scale=1, scaleT=1;
-var expo=0, expoT=0;
-var showDim=true, wire=false;
-
+var rot={a:38,b:26}, rotT={a:38,b:26};
+var zoom=1,panX=0,panY=0,scale=0,scaleT=1,expo=0,expoT=0;
+var showDim=true,wire=false;
 var FACES=[
   {n:[-1,0,0],v:[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]},
-  {n:[ 1,0,0],v:[[1,0,0],[1,1,0],[1,1,1],[1,0,1]]},
+  {n:[1,0,0], v:[[1,0,0],[1,1,0],[1,1,1],[1,0,1]]},
   {n:[0,-1,0],v:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]},
-  {n:[0, 1,0],v:[[0,1,0],[0,1,1],[1,1,1],[1,1,0]]},
+  {n:[0,1,0], v:[[0,1,0],[0,1,1],[1,1,1],[1,1,0]]},
   {n:[0,0,-1],v:[[0,0,0],[0,1,0],[1,1,0],[1,0,0]]},
-  {n:[0,0, 1],v:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]}
+  {n:[0,0,1], v:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]}
 ];
-var LIGHT=(function(){var l=[0.42,0.82,-0.55],m=Math.hypot(l[0],l[1],l[2]);return [l[0]/m,l[1]/m,l[2]/m];})();
+var LT=[0.42,0.82,-0.55], ltm=Math.sqrt(LT[0]*LT[0]+LT[1]*LT[1]+LT[2]*LT[2]);
+LT=[LT[0]/ltm,LT[1]/ltm,LT[2]/ltm];
 
-var ca,sa,cb,sb;
-function setRot(){
-  var A=rot.a*Math.PI/180, B=rot.b*Math.PI/180;
-  ca=Math.cos(A); sa=Math.sin(A); cb=Math.cos(B); sb=Math.sin(B);
-}
-/* svetové → pohľadové súradnice (bez mierky)
-   a = otočenie okolo zvislej osi, b = náklon (kladné = pohľad zhora)
-   vz: menšie číslo = bližšie ku kamere */
-function vx(x,y,z){ x-=CX; z-=CZ; return x*ca + z*sa; }
-function vy(x,y,z){ x-=CX; y-=CY; z-=CZ; var z1=-x*sa+z*ca; return y*cb + z1*sb; }
-function vz(x,y,z){ x-=CX; y-=CY; z-=CZ; var z1=-x*sa+z*ca; return -y*sb + z1*cb; }
-function rotN(n){
-  var x1=n[0]*ca + n[2]*sa, z1=-n[0]*sa + n[2]*ca;
-  return [x1, n[1]*cb + z1*sb, -n[1]*sb + z1*cb];
-}
+var ca=1,sa=0,cb=1,sb=0;
+function setRot(){var A=rot.a*Math.PI/180,B=rot.b*Math.PI/180;
+  ca=Math.cos(A);sa=Math.sin(A);cb=Math.cos(B);sb=Math.sin(B);}
+function vx(x,z){return (x-CX)*ca+(z-CZ)*sa;}
+function vy(x,y,z){var z1=-(x-CX)*sa+(z-CZ)*ca;return (y-CY)*cb+z1*sb;}
+function vz(x,y,z){var z1=-(x-CX)*sa+(z-CZ)*ca;return -(y-CY)*sb+z1*cb;}
+function rotN(n){var x1=n[0]*ca+n[2]*sa,z1=-n[0]*sa+n[2]*ca;
+  return [x1,n[1]*cb+z1*sb,-n[1]*sb+z1*cb];}
 
-var vis={}; Object.keys(GRP).forEach(function(k){vis[k]=true;});
-var hotGrp=null, hotIdx=-1, polys=[];
+var vis={sane:1,post:1,joist:1,brace:1,deck:1};
+var hotGrp=null,hotIdx=-1,polys=[];
 
-function offset(p){ return [p.ex[0]*expo, p.ex[1]*expo, p.ex[2]*expo]; }
-
-/* zoznam všetkých bodov pre automatické vycentrovanie */
 function bounds(){
-  var mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
-  function put(x,y,z){ var a=vx(x,y,z), b=vy(x,y,z);
-    if(a<mnx)mnx=a; if(a>mxx)mxx=a; if(b<mny)mny=b; if(b>mxy)mxy=b; }
-  P.forEach(function(p){
-    if(!vis[p.g])return; var o=offset(p);
-    for(var i=0;i<8;i++)
-      put(p.x+o[0]+(i&1?p.dx:0), p.y+o[1]+(i&2?p.dy:0), p.z+o[2]+(i&4?p.dz:0));
-  });
-  if(showDim) DIMS.forEach(function(d){
-    put(d[0]+d[6],d[1]+d[7],d[2]+d[8]); put(d[3]+d[6],d[4]+d[7],d[5]+d[8]);
-  });
-  if(mnx>mxx) return null;
-  return {w:mxx-mnx, h:mxy-mny, cx:(mnx+mxx)/2, cy:(mny+mxy)/2};
+  var a=1e9,b=-1e9,c=1e9,d=-1e9,any=false;
+  function put(x,y,z){var u=vx(x,z),v=vy(x,y,z);
+    if(u<a)a=u; if(u>b)b=u; if(v<c)c=v; if(v>d)d=v; any=true;}
+  for(var i=0;i<P.length;i++){
+    var p=P[i]; if(!vis[p.g])continue;
+    var ox=p.ex[0]*expo,oy=p.ex[1]*expo,oz=p.ex[2]*expo;
+    for(var j=0;j<8;j++)
+      put(p.x+ox+((j&1)?p.dx:0),p.y+oy+((j&2)?p.dy:0),p.z+oz+((j&4)?p.dz:0));
+  }
+  if(showDim) for(var m=0;m<DIMS.length;m++){var D=DIMS[m];
+    put(D[0]+D[6],D[1]+D[7],D[2]+D[8]); put(D[3]+D[6],D[4]+D[7],D[5]+D[8]);}
+  if(!any) return null;
+  return {w:b-a,h:d-c,cx:(a+b)/2,cy:(c+d)/2};
 }
 
 function draw(){
+  if(W<2||H<2) return;
   ctx.setTransform(dpr,0,0,dpr,0,0);
   var gr=ctx.createLinearGradient(0,0,0,H);
   gr.addColorStop(0,'#1b222a'); gr.addColorStop(1,'#0a0d11');
   ctx.fillStyle=gr; ctx.fillRect(0,0,W,H);
 
-  var bb=bounds();
-  if(bb){
-    var pad=46;
-    var fit=Math.min((W-pad*2)/Math.max(bb.w,1),(H-pad*2)/Math.max(bb.h,1));
-    scaleT=fit;
-  }
-  scale += (scaleT-scale)*0.16;
+  var bb=bounds(); if(!bb) return;
+  var pad=Math.min(46,W*0.09);
+  scaleT=Math.min((W-pad*2)/Math.max(bb.w,1),(H-pad*2)/Math.max(bb.h,1));
+  if(scale<=0) scale=scaleT;
+  scale+=(scaleT-scale)*0.16;
   var s=scale*zoom;
-  var ox=W/2 - (bb?bb.cx:0)*s + panX;
-  var oy=H/2 + (bb?bb.cy:0)*s + panY;
-  function px(x,y,z){ return [ox + vx(x,y,z)*s, oy - vy(x,y,z)*s]; }
+  var ox=W/2-bb.cx*s+panX, oy=H/2+bb.cy*s+panY;
+  function px(x,y,z){return [ox+vx(x,z)*s, oy-vy(x,y,z)*s];}
 
-  /* podlahový raster */
   ctx.lineWidth=1;
-  for(var k=-3;k<=3;k++){
-    var t=k*600;
-    ctx.strokeStyle = k===0 ? '#2c3742' : '#1b232b';
+  for(var g=-3;g<=3;g++){
+    var t=g*600; ctx.strokeStyle=g===0?'#2c3742':'#1b232b';
     ctx.beginPath();
-    var p1=px(CX+t,0,CZ-1800), p2=px(CX+t,0,CZ+1800);
+    var p1=px(CX+t,0,CZ-1800),p2=px(CX+t,0,CZ+1800);
     ctx.moveTo(p1[0],p1[1]); ctx.lineTo(p2[0],p2[1]);
-    var p3=px(CX-1800,0,CZ+t), p4=px(CX+1800,0,CZ+t);
+    var p3=px(CX-1800,0,CZ+t),p4=px(CX+1800,0,CZ+t);
     ctx.moveTo(p3[0],p3[1]); ctx.lineTo(p4[0],p4[1]);
     ctx.stroke();
   }
 
-  /* zber plôch */
   polys.length=0;
-  P.forEach(function(p,idx){
-    if(!vis[p.g])return;
-    var o=offset(p);
-    var X=p.x+o[0], Y=p.y+o[1], Z=p.z+o[2];
+  for(var i=0;i<P.length;i++){
+    var p=P[i]; if(!vis[p.g])continue;
+    var X=p.x+p.ex[0]*expo, Y=p.y+p.ex[1]*expo, Z=p.z+p.ex[2]*expo;
     for(var f=0;f<6;f++){
       var F=FACES[f], n=rotN(F.n);
-      if(n[2]>=0) continue;                       // odvrátené plochy preč
-      var pts=[], dsum=0;
-      for(var q=0;q<4;q++){
-        var vv=F.v[q];
-        var wx=X+vv[0]*p.dx, wy=Y+vv[1]*p.dy, wz=Z+vv[2]*p.dz;
-        pts.push(px(wx,wy,wz)); dsum+=vz(wx,wy,wz);
+      if(n[2]>=0) continue;
+      var pts=[],ds=0;
+      for(var u=0;u<4;u++){
+        var vv=F.v[u], wx=X+vv[0]*p.dx, wy=Y+vv[1]*p.dy, wz=Z+vv[2]*p.dz;
+        pts.push(px(wx,wy,wz)); ds+=vz(wx,wy,wz);
       }
-      var lam=Math.max(0, F.n[0]*LIGHT[0]+F.n[1]*LIGHT[1]+F.n[2]*LIGHT[2]);
-      polys.push({pts:pts, d:dsum/4, g:p.g, idx:idx, sh:0.38+0.62*lam});
+      var lam=F.n[0]*LT[0]+F.n[1]*LT[1]+F.n[2]*LT[2]; if(lam<0)lam=0;
+      polys.push({pts:pts,d:ds/4,g:p.g,idx:i,sh:0.38+0.62*lam});
     }
-  });
-  polys.sort(function(a,b){return b.d-a.d;});      // maľovanie odzadu
+  }
+  polys.sort(function(a,b){return b.d-a.d;});
 
-  polys.forEach(function(f){
-    var base=GRP[f.g].c, hl=(f.idx===hotIdx)||(f.g===hotGrp);
-    var m=f.sh*(hl?1.32:1);
-    var r=Math.min(255,base[0]*m)|0, gg=Math.min(255,base[1]*m)|0, b=Math.min(255,base[2]*m)|0;
-    ctx.beginPath(); ctx.moveTo(f.pts[0][0],f.pts[0][1]);
-    for(var q=1;q<4;q++) ctx.lineTo(f.pts[q][0],f.pts[q][1]);
+  for(var z=0;z<polys.length;z++){
+    var F2=polys[z], base=GRP[F2.g].c, hl=(F2.idx===hotIdx)||(F2.g===hotGrp);
+    var mm=F2.sh*(hl?1.32:1);
+    var r=Math.min(255,base[0]*mm)|0, gg=Math.min(255,base[1]*mm)|0, bl=Math.min(255,base[2]*mm)|0;
+    ctx.beginPath(); ctx.moveTo(F2.pts[0][0],F2.pts[0][1]);
+    ctx.lineTo(F2.pts[1][0],F2.pts[1][1]);
+    ctx.lineTo(F2.pts[2][0],F2.pts[2][1]);
+    ctx.lineTo(F2.pts[3][0],F2.pts[3][1]);
     ctx.closePath();
-    if(!wire){ ctx.fillStyle='rgb('+r+','+gg+','+b+')'; ctx.fill(); }
-    ctx.lineWidth = wire?1:0.9;
-    ctx.strokeStyle = wire ? (hl?'#f2a63b':'rgba(79,179,217,.72)')
-                           : (hl?'rgba(255,220,150,.9)':'rgba(10,14,18,.6)');
+    if(!wire){ctx.fillStyle='rgb('+r+','+gg+','+bl+')';ctx.fill();}
+    ctx.lineWidth=wire?1:0.9;
+    ctx.strokeStyle=wire?(hl?'#f2a63b':'rgba(79,179,217,.72)')
+                        :(hl?'rgba(255,220,150,.9)':'rgba(10,14,18,.6)');
     ctx.stroke();
-  });
+  }
 
-  /* kóty */
   if(showDim){
-    ctx.lineWidth=1.2; ctx.strokeStyle='#f2a63b';
     ctx.font='600 11px ui-monospace, monospace';
     ctx.textAlign='center'; ctx.textBaseline='middle';
-    DIMS.forEach(function(d){
-      var A=[d[0],d[1],d[2]], B=[d[3],d[4],d[5]], O=[d[6],d[7],d[8]];
-      var a1=px(A[0]+O[0],A[1]+O[1],A[2]+O[2]);
-      var b1=px(B[0]+O[0],B[1]+O[1],B[2]+O[2]);
-      var a0=px(A[0],A[1],A[2]), b0=px(B[0],B[1],B[2]);
-      ctx.globalAlpha=.42;
+    for(var m2=0;m2<DIMS.length;m2++){
+      var D=DIMS[m2];
+      var a1=px(D[0]+D[6],D[1]+D[7],D[2]+D[8]);
+      var b1=px(D[3]+D[6],D[4]+D[7],D[5]+D[8]);
+      var a0=px(D[0],D[1],D[2]), b0=px(D[3],D[4],D[5]);
+      ctx.strokeStyle='#f2a63b'; ctx.lineWidth=1.1;
+      ctx.globalAlpha=.4;
       ctx.beginPath(); ctx.moveTo(a0[0],a0[1]); ctx.lineTo(a1[0],a1[1]);
       ctx.moveTo(b0[0],b0[1]); ctx.lineTo(b1[0],b1[1]); ctx.stroke();
       ctx.globalAlpha=1;
       ctx.beginPath(); ctx.moveTo(a1[0],a1[1]); ctx.lineTo(b1[0],b1[1]); ctx.stroke();
-      [a1,b1].forEach(function(pp){
-        ctx.beginPath(); ctx.arc(pp[0],pp[1],2.4,0,6.3); ctx.fillStyle='#f2a63b'; ctx.fill();
-      });
-      var mx=(a1[0]+b1[0])/2, my=(a1[1]+b1[1])/2;
-      var tw=ctx.measureText(d[9]).width+12;
+      ctx.fillStyle='#f2a63b';
+      ctx.beginPath(); ctx.arc(a1[0],a1[1],2.4,0,6.3); ctx.fill();
+      ctx.beginPath(); ctx.arc(b1[0],b1[1],2.4,0,6.3); ctx.fill();
+      var mx=(a1[0]+b1[0])/2, my=(a1[1]+b1[1])/2, tw=ctx.measureText(D[9]).width+12;
       ctx.fillStyle='rgba(11,15,19,.92)'; ctx.fillRect(mx-tw/2,my-9,tw,18);
       ctx.strokeStyle='rgba(242,166,59,.5)'; ctx.lineWidth=1;
       ctx.strokeRect(mx-tw/2,my-9,tw,18);
-      ctx.fillStyle='#f2a63b'; ctx.fillText(d[9],mx,my+.5);
-      ctx.strokeStyle='#f2a63b'; ctx.lineWidth=1.2;
-    });
+      ctx.fillStyle='#f2a63b'; ctx.fillText(D[9],mx,my+0.5);
+    }
   }
 
-  /* os. indikátor */
-  var ax=W-46, ay=H-46, R=26;
-  [['X',[1,0,0],'#e2574c'],['Y',[0,1,0],'#7dc46b'],['Z',[0,0,1],'#4fb3d9']].forEach(function(A){
-    var n=rotN(A[1]);
-    ctx.globalAlpha=.35+.65*(-n[2]*.5+.5);
-    ctx.strokeStyle=A[2]; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax+n[0]*R, ay-n[1]*R); ctx.stroke();
-    ctx.fillStyle=A[2]; ctx.font='600 10px ui-monospace,monospace';
-    ctx.fillText(A[0], ax+n[0]*(R+8), ay-n[1]*(R+8));
+  var axx=W-46, axy=H-46, R=26;
+  var AX=[['X',[1,0,0],'#e2574c'],['Y',[0,1,0],'#7dc46b'],['Z',[0,0,1],'#4fb3d9']];
+  for(var w2=0;w2<3;w2++){
+    var n2=rotN(AX[w2][1]);
+    ctx.globalAlpha=.35+.65*(-n2[2]*.5+.5);
+    ctx.strokeStyle=AX[w2][2]; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(axx,axy); ctx.lineTo(axx+n2[0]*R,axy-n2[1]*R); ctx.stroke();
+    ctx.fillStyle=AX[w2][2]; ctx.font='600 10px ui-monospace,monospace';
+    ctx.fillText(AX[w2][0],axx+n2[0]*(R+8),axy-n2[1]*(R+8));
     ctx.globalAlpha=1;
-  });
+  }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   3. SLUČKA A OVLÁDANIE
-   ═══════════════════════════════════════════════════════════════ */
-function resize(){
+/* ═══════════════ 3. ROZLOŽENIE — počíta sa v JS, nie cez flexbox ═══════════════ */
+var wide=false, drawerOpen=false;
+function layout(){
+  var vw=window.innerWidth||document.documentElement.clientWidth||360;
+  var vh=window.innerHeight||document.documentElement.clientHeight||640;
+  if(window.visualViewport&&window.visualViewport.height>100) vh=window.visualViewport.height;
+  wrap.style.width=vw+'px'; wrap.style.height=vh+'px';
+  wide=vw>=880;
+
+  var hh=head.offsetHeight||88;
+  var dh;
+  if(wide){
+    dh=vh-hh;
+    drawer.style.left=(vw-330)+'px'; drawer.style.width='330px';
+    drawer.style.top=hh+'px'; drawer.style.height=dh+'px'; drawer.style.bottom='auto';
+    drawer.style.borderTop='0'; drawer.style.borderLeft='1px solid #252d36';
+    dbody.style.display='block';
+    dbody.style.height=Math.max(60,dh-(dhead.offsetHeight||36))+'px';
+    stage.style.left='0px'; stage.style.top=hh+'px';
+    stage.style.width=(vw-330)+'px'; stage.style.height=dh+'px';
+  }else{
+    var headerH=(dhead.offsetHeight||36);
+    dh=drawerOpen?Math.min(Math.round(vh*0.45),330):headerH;
+    drawer.style.left='0px'; drawer.style.width=vw+'px';
+    drawer.style.top='auto'; drawer.style.bottom='0px'; drawer.style.height=dh+'px';
+    drawer.style.borderTop='1px solid #252d36'; drawer.style.borderLeft='0';
+    dbody.style.display=drawerOpen?'block':'none';
+    dbody.style.height=Math.max(0,dh-headerH)+'px';
+    stage.style.left='0px'; stage.style.top=hh+'px';
+    stage.style.width=vw+'px';
+    stage.style.height=Math.max(180,vh-hh-dh)+'px';
+  }
+
+  W=stage.offsetWidth||vw;
+  H=stage.offsetHeight||Math.max(180,vh-hh-dh);
   dpr=Math.min(window.devicePixelRatio||1,2);
-  W=stage.clientWidth; H=stage.clientHeight;
   cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
   cv.style.width=W+'px'; cv.style.height=H+'px';
-}
-window.addEventListener('resize',function(){resize();});
-if(window.visualViewport) window.visualViewport.addEventListener('resize',resize);
-
-function loop(){
-  rot.a += (rotT.a-rot.a)*0.18;
-  rot.b += (rotT.b-rot.b)*0.18;
-  expo  += (expoT-expo)*0.12;
-  setRot();
+  scale=0;
   draw();
-  requestAnimationFrame(loop);
 }
 
-/* --- ukazovateľ --- */
-var pointers={}, lastMid=null, lastDist=0;
-function ptsArr(){ return Object.keys(pointers).map(function(k){return pointers[k];}); }
-
-cv.addEventListener('pointerdown',function(e){
-  cv.setPointerCapture(e.pointerId);
-  pointers[e.pointerId]={x:e.clientX,y:e.clientY};
-  var a=ptsArr();
-  if(a.length===2){ lastDist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
-                    lastMid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2}; }
-});
-cv.addEventListener('pointermove',function(e){
-  if(!pointers[e.pointerId]){ pick(e); return; }
-  var prev=pointers[e.pointerId];
-  pointers[e.pointerId]={x:e.clientX,y:e.clientY};
-  var a=ptsArr();
-  if(a.length===1){
-    rotT.a -= (e.clientX-prev.x)*0.42;
-    rotT.b  = Math.max(-89,Math.min(89, rotT.b + (e.clientY-prev.y)*0.42));
-  } else if(a.length===2){
-    var d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
-    var mid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};
-    if(lastDist) zoom=Math.max(0.35,Math.min(6, zoom*d/lastDist));
-    if(lastMid){ panX+=mid.x-lastMid.x; panY+=mid.y-lastMid.y; }
-    lastDist=d; lastMid=mid;
+/* ═══════════════ 4. OVLÁDANIE ═══════════════ */
+function fit(){zoom=1;panX=0;panY=0;}
+var pts={}, nP=0, lastD=0, lastM=null;
+function pdown(id,x,y){ if(!pts[id])nP++; pts[id]={x:x,y:y};
+  if(nP===2){var A=keys(); lastD=dist(A[0],A[1]); lastM=mid(A[0],A[1]);} }
+function pmove(id,x,y){
+  if(!pts[id]) return false;
+  var pr=pts[id]; pts[id]={x:x,y:y};
+  if(nP===1){
+    rotT.a-=(x-pr.x)*0.42;
+    rotT.b=Math.max(-89,Math.min(89,rotT.b+(y-pr.y)*0.42));
+  }else if(nP>=2){
+    var A=keys(); var d=dist(A[0],A[1]), m=mid(A[0],A[1]);
+    if(lastD) zoom=Math.max(0.35,Math.min(6,zoom*d/lastD));
+    if(lastM){panX+=m.x-lastM.x; panY+=m.y-lastM.y;}
+    lastD=d; lastM=m;
   }
-});
-function up(e){ delete pointers[e.pointerId]; if(ptsArr().length<2){lastDist=0;lastMid=null;} }
-cv.addEventListener('pointerup',up);
-cv.addEventListener('pointercancel',up);
-cv.addEventListener('pointerleave',function(e){ up(e); setHot(null,-1); });
-cv.addEventListener('wheel',function(e){
-  e.preventDefault();
-  zoom=Math.max(0.35,Math.min(6, zoom*(e.deltaY>0?0.9:1.111)));
-},{passive:false});
-cv.addEventListener('dblclick',function(){ fit(); rotT.a=38; rotT.b=26; });
-
-function fit(){ zoom=1; panX=0; panY=0; }
-
-/* --- výber dielu pod kurzorom --- */
-var readout=document.getElementById('readout');
-function pick(e){
-  var r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
-  for(var i=polys.length-1;i>=0;i--){
-    if(inPoly(mx,my,polys[i].pts)){ setHot(polys[i].g, polys[i].idx); return; }
-  }
-  setHot(null,-1);
+  return true;
 }
-function inPoly(x,y,p){
-  var c=false;
-  for(var i=0,j=3;i<4;j=i++){
-    if(((p[i][1]>y)!==(p[j][1]>y)) &&
-       (x < (p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1]) + p[i][0])) c=!c;
-  }
-  return c;
-}
-function setHot(g,idx){
-  if(hotIdx===idx)return;
-  hotIdx=idx; hotGrp=null;
-  if(idx>=0){
-    var p=P[idx];
-    readout.innerHTML='<div class="nm">'+p.label+'</div><div>'+
-      Math.round(p.dx)+' × '+Math.round(p.dy)+' × '+Math.round(p.dz)+' mm</div>';
-  } else readout.innerHTML='';
-  document.querySelectorAll('#bom tr').forEach(function(tr){
-    tr.classList.toggle('hot', idx>=0 && tr.dataset.g===P[idx].g);
+function pup(id){ if(pts[id]){delete pts[id];nP--;} if(nP<2){lastD=0;lastM=null;} if(nP<0)nP=0; }
+function keys(){var a=[];for(var k in pts)a.push(pts[k]);return a;}
+function dist(a,b){return Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));}
+function mid(a,b){return {x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
+
+if(window.PointerEvent){
+  cv.addEventListener('pointerdown',function(e){ try{cv.setPointerCapture(e.pointerId);}catch(x){}
+    pdown(e.pointerId,e.clientX,e.clientY); });
+  cv.addEventListener('pointermove',function(e){ if(!pmove(e.pointerId,e.clientX,e.clientY)) pick(e.clientX,e.clientY); });
+  cv.addEventListener('pointerup',function(e){pup(e.pointerId);});
+  cv.addEventListener('pointercancel',function(e){pup(e.pointerId);});
+}else{
+  cv.addEventListener('touchstart',function(e){
+    for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];pdown(t.identifier,t.clientX,t.clientY);}
+  },{passive:true});
+  cv.addEventListener('touchmove',function(e){
+    e.preventDefault();
+    for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];pmove(t.identifier,t.clientX,t.clientY);}
+  },{passive:false});
+  cv.addEventListener('touchend',function(e){
+    for(var i=0;i<e.changedTouches.length;i++) pup(e.changedTouches[i].identifier);
   });
+  var md=false;
+  cv.addEventListener('mousedown',function(e){md=true;pdown('m',e.clientX,e.clientY);});
+  cv.addEventListener('mousemove',function(e){ if(md)pmove('m',e.clientX,e.clientY); else pick(e.clientX,e.clientY); });
+  cv.addEventListener('mouseup',function(){md=false;pup('m');});
+}
+cv.addEventListener('wheel',function(e){
+  e.preventDefault(); zoom=Math.max(0.35,Math.min(6,zoom*(e.deltaY>0?0.9:1.111)));
+},{passive:false});
+cv.addEventListener('dblclick',function(){fit();rotT.a=38;rotT.b=26;});
+
+var readout=document.getElementById('readout');
+function pick(cxp,cyp){
+  var r=cv.getBoundingClientRect(), mx=cxp-r.left, my=cyp-r.top;
+  for(var i=polys.length-1;i>=0;i--)
+    if(inPoly(mx,my,polys[i].pts)){ setHot(polys[i].idx); return; }
+  setHot(-1);
+}
+function inPoly(x,y,p){var c=false;
+  for(var i=0,j=3;i<4;j=i++)
+    if(((p[i][1]>y)!==(p[j][1]>y)) && (x<(p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1])+p[i][0])) c=!c;
+  return c;}
+function setHot(idx){
+  if(hotIdx===idx)return; hotIdx=idx;
+  readout.innerHTML = idx>=0
+    ? '<div class="nm">'+P[idx].label+'</div><div>'+Math.round(P[idx].dx)+' × '+
+      Math.round(P[idx].dy)+' × '+Math.round(P[idx].dz)+' mm</div>' : '';
+  var rows=document.querySelectorAll('#bom tr');
+  for(var i=0;i<rows.length;i++)
+    rows[i].className = (idx>=0 && rows[i].getAttribute('data-g')===P[idx].g)
+      ? (vis[P[idx].g]?'hot':'hot off') : (vis[rows[i].getAttribute('data-g')]?'':'off');
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   4. KUSOVNÍK A TLAČIDLÁ
-   ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ 5. KUSOVNÍK + TLAČIDLÁ ═══════════════ */
 var ROWS=[
-  ["sane" ,"Sane (spodný nosník)","45×70" ,"860"  ,3],
-  ["post" ,"Stĺpik P1 · predný"  ,"45×70" ,"100"  ,3],
-  ["post" ,"Stĺpik P2"           ,"45×70" ,"344"  ,3],
-  ["post" ,"Stĺpik P3"           ,"45×70" ,"587"  ,3],
-  ["post" ,"Stĺpik P4 · zadný"   ,"45×70" ,"587"  ,3],
-  ["joist","Nosník schodu 1"     ,"45×70" ,"285"  ,3],
-  ["joist","Nosník schodu 2"     ,"45×70" ,"285"  ,3],
-  ["joist","Nosník schodu 3"     ,"45×70" ,"290"  ,3],
-  ["brace","Priečna výstuha"     ,"45×70" ,"562,5",6],
-  ["deck" ,"Nášľapná doska"      ,"28×140","1260" ,6]
+  ["sane","Sane (spodn\u00fd nosn\u00edk)","45\u00d770","500",2],
+  ["post","St\u013apik P1 \u00b7 predn\u00fd","45\u00d770","107",2],
+  ["post","St\u013apik P2 \u00b7 stredn\u00fd","45\u00d770","357",2],
+  ["post","St\u013apik P3 \u00b7 zadn\u00fd","45\u00d770","357",2],
+  ["joist","Nosn\u00edk schodu 1","45\u00d770","250",2],
+  ["joist","Nosn\u00edk schodu 2","45\u00d770","250",2],
+  ["brace","Prie\u010dna v\u00fdstuha","45\u00d770","510",3],
+  ["deck","N\u00e1\u0161\u013eapn\u00e1 doska","28\u00d7120","600",4]
 ];
 var bom=document.getElementById('bom');
-ROWS.forEach(function(r){
-  var c=GRP[r[0]].c, tr=document.createElement('tr');
-  tr.dataset.g=r[0];
-  tr.innerHTML='<td class="sw"><i style="background:rgb('+c[0]+','+c[1]+','+c[2]+')"></i></td>'+
-    '<td>'+r[1]+'</td><td class="num">'+r[2]+'</td><td class="num">'+r[3]+'</td><td class="num">'+r[4]+'</td>';
-  tr.addEventListener('mouseenter',function(){ hotGrp=r[0]; });
-  tr.addEventListener('mouseleave',function(){ hotGrp=null; });
-  tr.addEventListener('click',function(){
-    vis[r[0]]=!vis[r[0]];
-    document.querySelectorAll('#bom tr').forEach(function(t){
-      if(t.dataset.g===r[0]) t.classList.toggle('off', !vis[r[0]]);
-    });
-  });
-  bom.appendChild(tr);
-});
+for(var rr=0;rr<ROWS.length;rr++){
+  (function(r){
+    var c=GRP[r[0]].c, tr=document.createElement('tr');
+    tr.setAttribute('data-g',r[0]);
+    tr.innerHTML='<td class="sw"><i style="background:rgb('+c[0]+','+c[1]+','+c[2]+')"></i></td>'+
+      '<td>'+r[1]+'</td><td class="num">'+r[2]+'</td><td class="num">'+r[3]+'</td><td class="num">'+r[4]+'</td>';
+    tr.onmouseenter=function(){hotGrp=r[0];};
+    tr.onmouseleave=function(){hotGrp=null;};
+    tr.onclick=function(){
+      vis[r[0]]=!vis[r[0]];
+      var rows=document.querySelectorAll('#bom tr');
+      for(var i=0;i<rows.length;i++)
+        rows[i].className = vis[rows[i].getAttribute('data-g')]?'':'off';
+      scale=0;
+    };
+    bom.appendChild(tr);
+  })(ROWS[rr]);
+}
 
-document.querySelectorAll('[data-v]').forEach(function(b){
-  b.addEventListener('click',function(){
-    var v=VIEWS[b.dataset.v]; rotT.a=v[0]; rotT.b=v[1]; fit();
-  });
-});
+var vb=document.querySelectorAll('[data-v]');
+for(var b2=0;b2<vb.length;b2++)
+  (function(btn){ btn.onclick=function(){var v=VIEWS[btn.getAttribute('data-v')];rotT.a=v[0];rotT.b=v[1];fit();}; })(vb[b2]);
+
 var bD=document.getElementById('bDim'),bW=document.getElementById('bWire'),bE=document.getElementById('bExp');
-bD.addEventListener('click',function(){ showDim=!showDim; bD.classList.toggle('on',showDim); });
-bW.addEventListener('click',function(){ wire=!wire; bW.classList.toggle('on',wire); });
-bE.addEventListener('click',function(){ expoT=expoT?0:1; bE.classList.toggle('on',!!expoT); });
-document.getElementById('bFit').addEventListener('click',fit);
-document.getElementById('dhead').addEventListener('click',function(){
-  document.getElementById('drawer').classList.toggle('closed');
-  setTimeout(resize,230);
-});
-if(innerWidth>=880) document.getElementById('drawer').classList.remove('closed');
+bD.onclick=function(){showDim=!showDim;bD.className=showDim?'tb on':'tb';};
+bW.onclick=function(){wire=!wire;bW.className=wire?'tb on':'tb';};
+bE.onclick=function(){expoT=expoT?0:1;bE.className=expoT?'tb on':'tb';};
+document.getElementById('bFit').onclick=fit;
+dhead.onclick=function(){ drawerOpen=!drawerOpen;
+  document.querySelector('#dhead .chev').textContent=drawerOpen?'▴':'▾'; layout(); };
 
-resize(); setRot(); loop();
+/* ═══════════════ 6. ŠTART ═══════════════ */
+function frame(){
+  rot.a+=(rotT.a-rot.a)*0.18;
+  rot.b+=(rotT.b-rot.b)*0.18;
+  expo +=(expoT-expo)*0.12;
+  setRot(); draw();
+  (window.requestAnimationFrame||function(f){setTimeout(f,33);})(frame);
+}
+window.onresize=layout;
+window.addEventListener('orientationchange',function(){setTimeout(layout,250);});
+if(window.visualViewport) window.visualViewport.addEventListener('resize',layout);
+
+if(window.innerWidth>=880) drawerOpen=true;
+layout(); setRot(); frame();
+/* poistka: niektoré prehliadače hlásia rozmery až po dokreslení stránky */
+setTimeout(layout,120); setTimeout(layout,600); setTimeout(layout,1600);
+window.addEventListener('load',layout);
 })();
 </script>
 </body>
