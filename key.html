@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tónina — z akordov na stupnice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tolex:#131210;
+  --tolex-hi:#1e1c19;
+  --gold-1:#dcb85c;
+  --gold-2:#a8801f;
+  --gold-3:#c8a03c;
+  --engrave:#2a1f06;
+  --cream:#ece4d2;
+  --cream-dim:#9a9285;
+  --jewel:#d1372b;
+  --line:#33302a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--tolex);
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.014) 0 2px,transparent 2px 4px);
+  color:var(--cream);
+  font-family:Barlow,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:860px;margin:0 auto;padding:14px 14px 64px}
+
+/* ---- faceplatess ---- */
+.plate{
+  position:relative;border-radius:4px;padding:16px 18px 14px;
+  background:linear-gradient(178deg,var(--gold-1) 0%,var(--gold-3) 38%,var(--gold-2) 100%);
+  box-shadow:0 2px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.45);
+}
+.plate::before,.plate::after{
+  content:"";position:absolute;top:8px;width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#f0e0aa,#7e5f14 70%);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);
+}
+.plate::before{left:8px}
+.plate::after{right:8px}
+.plate h1{
+  margin:0;font-family:"Barlow Condensed",Barlow,sans-serif;font-weight:700;
+  font-size:34px;letter-spacing:.14em;color:var(--engrave);
+  text-shadow:0 1px 0 rgba(255,255,255,.4);
+}
+.plate p{margin:2px 0 0;color:#4a3a12;font-size:13.5px;letter-spacing:.02em;max-width:46ch}
+
+/* ---- controls ---- */
+.stack{margin-top:18px}
+label.field{display:block;font-family:"Barlow Condensed",sans-serif;font-size:17px;letter-spacing:.06em;color:var(--cream-dim);margin-bottom:6px}
+textarea{
+  width:100%;min-height:74px;resize:vertical;
+  background:var(--tolex-hi);color:var(--cream);border:1px solid var(--line);border-radius:3px;
+  padding:11px 12px;font:500 17px/1.5 Barlow,sans-serif;letter-spacing:.02em;
+}
+textarea:focus,button:focus-visible,.chip:focus-visible{outline:2px solid var(--gold-3);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button{
+  font:600 15px/1 Barlow,sans-serif;letter-spacing:.03em;cursor:pointer;
+  border-radius:3px;padding:11px 15px;border:1px solid var(--line);
+  background:var(--tolex-hi);color:var(--cream);
+}
+button:hover{border-color:#57524a}
+button.primary{background:linear-gradient(178deg,var(--gold-1),var(--gold-2));color:var(--engrave);border-color:#8d6a15;font-weight:700}
+button.mic{display:flex;align-items:center;gap:9px}
+.jewel{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9b90,#7a1a12);opacity:.5}
+button.mic.on .jewel{opacity:1;box-shadow:0 0 9px 2px rgba(209,55,43,.75)}
+button.mic.on{border-color:var(--jewel)}
+
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;min-height:6px}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;background:var(--tolex-hi);
+  border:1px solid var(--line);border-radius:3px;padding:6px 8px 6px 11px;
+  font-family:"Barlow Condensed",sans-serif;font-size:19px;font-weight:600;letter-spacing:.03em;
+}
+.chip b{font-weight:600}
+.chip span{color:var(--cream-dim);font-size:15px;cursor:pointer;padding:0 2px}
+.chip span:hover{color:var(--jewel)}
+
+.hear{font-size:14px;color:var(--cream-dim);margin-top:10px;min-height:22px}
+.hear b{color:var(--gold-1);font-weight:600}
+
+/* ---- result ---- */
+.result{margin-top:26px;border-top:1px solid var(--line);padding-top:20px}
+.keyline{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.keyname{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:46px;line-height:1;letter-spacing:.01em;color:var(--gold-1)}
+.conf{font-size:14px;color:var(--cream-dim)}
+.alt{font-size:14px;color:var(--cream-dim);margin-top:8px}
+.notes{margin-top:14px;display:flex;gap:6px;flex-wrap:wrap}
+.note{
+  font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:600;
+  border:1px solid var(--line);border-radius:3px;padding:5px 11px;min-width:44px;text-align:center;
+}
+.note.root{background:linear-gradient(178deg,var(--gold-1),var(--gold-2));color:var(--engrave);border-color:#8d6a15}
+
+h2{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:21px;letter-spacing:.05em;color:var(--cream-dim);margin:30px 0 10px}
+
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:8px 8px 8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:15px;color:var(--cream-dim);letter-spacing:.04em}
+td.deg{font-family:"Barlow Condensed",sans-serif;font-size:19px;color:var(--gold-1);white-space:nowrap}
+td.ch{font-weight:600;white-space:nowrap}
+td small{display:block;color:var(--cream-dim);font-size:13px}
+.foreign{color:var(--jewel)}
+
+/* ---- fretboard ---- */
+.scaleTabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.tab{font:600 14px Barlow,sans-serif;padding:8px 12px;border:1px solid var(--line);border-radius:3px;background:var(--tolex-hi);color:var(--cream-dim);cursor:pointer}
+.tab.sel{background:linear-gradient(178deg,var(--gold-1),var(--gold-2));color:var(--engrave);border-color:#8d6a15}
+.fbwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+.fbwrap svg{display:block;min-width:700px}
+.empty{color:var(--cream-dim);font-size:15px}
+footer{margin-top:36px;font-size:13px;color:#6c665d;border-top:1px solid var(--line);padding-top:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="plate">
+  <h1>TÓNINA</h1>
+  <p>Zadaj alebo zahraj akordy pesničky. Dostaneš tóninu, stupnicu a tóny, ktoré nad ňou sedia.</p>
+</header>
+
+<div class="stack">
+  <label class="field" for="inp">Akordy v poradí, ako idú v pesničke</label>
+  <textarea id="inp" placeholder="napr. Am F C G  alebo  D | Bm | G | A7" spellcheck="false"></textarea>
+  <div class="row">
+    <button class="primary" id="go">Zisti tóninu</button>
+    <button class="mic" id="mic"><span class="jewel"></span><span id="micTxt">Zahrať do mikrofónu</span></button>
+    <button id="clr">Vymazať</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="hear" id="hear"></div>
+</div>
+
+<div class="result" id="out"><p class="empty">Zatiaľ nič. Napíš akordy alebo zapni mikrofón a hraj ich pomaly za sebou.</p></div>
+
+<footer>Detekcia sluchom funguje najlepšie na čistý zvuk, jeden akord naraz, nechaj ho doznieť. Skreslenie a hluk ju rozhodia.</footer>
+</div>
+
+<script>
+/* ============ teória ============ */
+const PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const LET=['C','D','E','F','G','A','B'];
+const LETPC=[0,2,4,5,7,9,11];
+const MAJPREF=['C','Db','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+const MINPREF=['C','C#','D','Eb','E','F','F#','G','G#','A','Bb','B'];
+const MAJ=[0,2,4,5,7,9,11], MIN=[0,2,3,5,7,8,10];
+const MODESK=['iónska','dórska','frygická','lydická','mixolydická','aiolská','lokrická'];
+
+const QUAL=[
+ ['maj7',[0,4,7,11],'maj7'],['maj9',[0,4,7,11,2],'maj7'],['M7',[0,4,7,11],'maj7'],['Δ',[0,4,7,11],'maj7'],
+ ['m7b5',[0,3,6,10],'m7b5'],['ø',[0,3,6,10],'m7b5'],
+ ['dim7',[0,3,6,9],'dim'],['dim',[0,3,6],'dim'],['°',[0,3,6],'dim'],
+ ['m9',[0,3,7,10,2],'m7'],['m11',[0,3,7,10,5],'m7'],['m7',[0,3,7,10],'m7'],['min7',[0,3,7,10],'m7'],
+ ['m6',[0,3,7,9],'min'],['m',[0,3,7],'min'],['min',[0,3,7],'min'],['-',[0,3,7],'min'],
+ ['sus4',[0,5,7],'sus'],['sus2',[0,2,7],'sus'],['sus',[0,5,7],'sus'],
+ ['aug',[0,4,8],'aug'],['+',[0,4,8],'aug'],
+ ['13',[0,4,7,10,2,9],'dom'],['11',[0,4,7,10,5],'dom'],['9',[0,4,7,10,2],'dom'],['7',[0,4,7,10],'dom'],
+ ['6',[0,4,7,9],'maj'],['add9',[0,4,7,2],'maj'],['5',[0,7],'pow'],
+ ['maj',[0,4,7],'maj'],['M',[0,4,7],'maj'],['',[0,4,7],'maj']
+];
+
+function parseChord(raw){
+  const s=raw.replace(/[()]/g,'').trim(); if(!s) return null;
+  const m=s.match(/^([A-Ga-g])([#b♯♭]?)(.*)$/); if(!m) return null;
+  let pc=PC[m[1].toUpperCase()];
+  const acc=m[2].replace('♯','#').replace('♭','b');
+  if(acc==='#')pc=(pc+1)%12; if(acc==='b')pc=(pc+11)%12;
+  let rest=m[3].split('/')[0].trim();
+  for(const [suf,iv,type] of QUAL){
+    if(suf===''||rest.toLowerCase().startsWith(suf.toLowerCase())){
+      if(suf!==''&&rest.length&&rest.slice(0,suf.length).toLowerCase()!==suf.toLowerCase()) continue;
+      return {label:s,pc,type,pcs:[...new Set(iv.map(i=>(pc+i)%12))]};
+    }
+  }
+  return null;
+}
+function spell(tonicPc,mode){
+  const name=(mode==='dur'?MAJPREF:MINPREF)[tonicPc];
+  const li=LET.indexOf(name[0]); const iv=mode==='dur'?MAJ:MIN;
+  return iv.map((step,i)=>{
+    const l=LET[(li+i)%7]; const want=(tonicPc+step)%12;
+    let d=((want-LETPC[(li+i)%7])%12+12)%12; if(d>6)d-=12;
+    return l+(d===0?'':d>0?'#'.repeat(d):'b'.repeat(-d));
+  });
+}
+const keyName=(pc,mode)=>(mode==='dur'?MAJPREF[pc]+' dur':MINPREF[pc]+' mol');
+const RN=['I','II','III','IV','V','VI','VII'];
+function roman(deg,type){
+  let r=RN[deg];
+  if(type==='min'||type==='m7')r=r.toLowerCase();
+  if(type==='dim'||type==='m7b5')r=r.toLowerCase()+'°';
+  if(type==='dom')r+='7'; if(type==='maj7')r+='maj7'; if(type==='m7')r+='7';
+  if(type==='aug')r+='+'; if(type==='sus')r+='sus';
+  return r;
+}
+
+/* ============ detekcia tóniny ============ */
+const DIA={dur:['maj','min','min','maj','dom','min','dim'],mol:['min','dim','maj','min','min','maj','maj']};
+const W  ={dur:[1.5,1.05,.9,1.15,1.35,1.15,.8],mol:[1.5,.8,1.1,1.15,1.1,1.15,1.2]};
+
+function detect(chords){
+  const res=[];
+  for(let t=0;t<12;t++) for(const mode of ['dur','mol']){
+    const sc=(mode==='dur'?MAJ:MIN).map(x=>(t+x)%12);
+    let s=0;
+    chords.forEach((c,i)=>{
+      const deg=sc.indexOf(c.pc);
+      let sub=0;
+      const inSc=c.pcs.filter(p=>sc.includes(p)).length;
+      const out=c.pcs.length-inSc;
+      sub+=inSc*0.8-out*2.4;
+      if(deg>=0){
+        const exp=DIA[mode][deg];
+        const ok = exp===c.type || (exp==='maj'&&['maj7','dom','sus','pow'].includes(c.type))
+                 || (exp==='min'&&['m7','pow'].includes(c.type)) || (exp==='dom'&&['maj','maj7'].includes(c.type))
+                 || (exp==='dim'&&c.type==='m7b5');
+        sub+=(ok?2.6:0.6)*W[mode][deg];
+        // harmonická mol: V dur / V7 a vii°
+        if(mode==='mol'&&deg===4&&['maj','dom','aug'].includes(c.type)) sub+=3.2;
+      }else{
+        sub-=1.4;
+        if(mode==='mol'&&c.pc===(t+11)%12&&['dim','m7b5'].includes(c.type)) sub+=3.0;
+      }
+      s+=sub;
+    });
+    // kadencie a poloha toniky
+    for(let i=0;i<chords.length-1;i++){
+      const a=chords[i],b=chords[i+1];
+      if(b.pc===t&&a.pc===(t+7)%12&&(a.type==='dom'||a.type==='maj')) s+=mode==='mol'?3:2.4;
+      if(b.pc===t&&a.pc===(t+5)%12) s+=1.0;
+    }
+    if(chords.length){
+      if(chords[chords.length-1].pc===t) s+=3.0;
+      if(chords[0].pc===t) s+=2.0;
+    }
+    res.push({t,mode,score:s/Math.max(1,chords.length)});
+  }
+  res.sort((a,b)=>b.score-a.score);
+  const gap=res[0].score-res[1].score;
+  res[0].conf=Math.max(35,Math.min(99,Math.round(52+gap*26)));
+  return res;
+}
+
+/* ============ stupnice ============ */
+const SCALES=k=>{
+  const t=k.t,dur=k.mode==='dur';
+  const par=dur?t:(t+3)%12;                  // paralelná durová stupnica
+  const rel=dur?(t+9)%12:t;                  // relatívna molová
+  return [
+    {n:dur?'Durová stupnica':'Molová stupnica (prirodzená)',root:t,iv:dur?MAJ:MIN,
+     d:'Základ. Sedí na celú pesničku.'},
+    {n:'Molová pentatonika '+MINPREF[rel],root:rel,iv:[0,3,5,7,10],
+     d:'Najistejšia voľba na sóla — žiadny tón sa nebije.'},
+    {n:'Durová pentatonika '+MAJPREF[par],root:par,iv:[0,2,4,7,9],
+     d:'Tie isté tóny ako molová pentatonika, len iné ťažisko.'},
+    {n:'Bluesová '+MINPREF[rel],root:rel,iv:[0,3,5,6,7,10],
+     d:'Pentatonika plus blue note (b5). Špinavšie, dobré na riffy.'},
+    {n:'Harmonická mol '+MINPREF[dur?rel:t],root:dur?rel:t,iv:[0,2,3,5,8,11],
+     d:'Použi ju nad durovým V akordom, ak sa v pesničke objaví.'}
+  ];
+};
+
+/* ============ vykreslenie ============ */
+let chords=[], current=null, scaleIdx=0;
+const $=id=>document.getElementById(id);
+
+function drawChips(){
+  $('chips').innerHTML=chords.map((c,i)=>`<span class="chip"><b>${c.label}</b><span data-i="${i}" role="button" tabindex="0" aria-label="Odstrániť">×</span></span>`).join('');
+  $('chips').querySelectorAll('span[data-i]').forEach(el=>el.onclick=()=>{
+    chords.splice(+el.dataset.i,1); $('inp').value=chords.map(c=>c.label).join(' '); drawChips(); render();
+  });
+}
+function readInput(){
+  chords=$('inp').value.split(/[\s,|]+/).map(parseChord).filter(Boolean);
+  drawChips();
+}
+
+function fretboard(rootPc,iv){
+  const tune=[4,11,7,2,9,4], set=iv.map(x=>(rootPc+x)%12);
+  const names=MAJPREF, F=15, x0=48, fw=44, y0=22, sh=26;
+  let s=`<svg viewBox="0 0 ${x0+F*fw+20} ${y0+5*sh+34}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hmatník so stupnicou">`;
+  s+=`<rect x="${x0}" y="${y0-8}" width="${F*fw}" height="${5*sh+16}" fill="#1a1815"/>`;
+  for(let f=0;f<=F;f++){
+    const x=x0+f*fw;
+    s+=`<line x1="${x}" y1="${y0-8}" x2="${x}" y2="${y0+5*sh+8}" stroke="${f===0?'#e8e1d0':'#4a453d'}" stroke-width="${f===0?4:1.5}"/>`;
+    if(f>0)s+=`<text x="${x-fw/2}" y="${y0+5*sh+28}" fill="#6c665d" font-size="12" font-family="Barlow" text-anchor="middle">${f}</text>`;
+  }
+  for(let st=0;st<6;st++) s+=`<line x1="${x0}" y1="${y0+st*sh}" x2="${x0+F*fw}" y2="${y0+st*sh}" stroke="#524c43" stroke-width="1"/>`;
+  for(let st=0;st<6;st++) for(let f=0;f<=F;f++){
+    const pc=(tune[st]+f)%12; if(!set.includes(pc)) continue;
+    const x=f===0?x0-20:x0+f*fw-fw/2, y=y0+st*sh, isR=pc===rootPc;
+    s+=`<circle cx="${x}" cy="${y}" r="11" fill="${isR?'#c8a03c':'#2b2822'}" stroke="${isR?'#8d6a15':'#6b645a'}" stroke-width="1.5"/>`;
+    s+=`<text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="600" font-family="Barlow" fill="${isR?'#2a1f06':'#d8d0be'}">${names[pc]}</text>`;
+  }
+  return s+'</svg>';
+}
+
+function render(){
+  const o=$('out');
+  if(!chords.length){o.innerHTML='<p class="empty">Zatiaľ nič. Napíš akordy alebo zapni mikrofón a hraj ich pomaly za sebou.</p>';return;}
+  if(chords.length<2){o.innerHTML='<p class="empty">Jeden akord na určenie tóniny nestačí — pridaj aspoň ďalší.</p>';return;}
+  const r=detect(chords); current=r[0];
+  const sc=(current.mode==='dur'?MAJ:MIN).map(x=>(current.t+x)%12);
+  const sp=spell(current.t,current.mode);
+
+  let h=`<div class="keyline"><div class="keyname">${keyName(current.t,current.mode)}</div>
+    <div class="conf">istota ${current.conf} %</div></div>`;
+  h+=`<div class="alt">Ďalej pripadá do úvahy ${keyName(r[1].t,r[1].mode)}${r[2]?' alebo '+keyName(r[2].t,r[2].mode):''}.</div>`;
+  h+=`<div class="notes">${sp.map((n,i)=>`<div class="note${i===0?' root':''}">${n}</div>`).join('')}</div>`;
+
+  h+='<h2>Akord po akorde</h2><table><tr><th>Stupeň</th><th>Akord</th><th>Čo nad ním hrať</th></tr>';
+  chords.forEach(c=>{
+    const deg=sc.indexOf(c.pc);
+    if(deg<0){
+      h+=`<tr><td class="deg foreign">—</td><td class="ch">${c.label}</td><td class="foreign">Mimo tóniny. Buď je to prechodný akord, alebo si tam pesnička modulovala.</td></tr>`;
+      return;
+    }
+    const modeDeg=(current.mode==='dur'?deg:(deg+5)%7);
+    const scale=sc.map(p=>p);
+    const avoid=scale.filter(p=>c.pcs.some(t=>(p-t+12)%12===1)&&!c.pcs.includes(p));
+    h+=`<tr><td class="deg">${roman(deg,c.type)}</td><td class="ch">${c.label}</td>
+        <td>${MAJPREF[c.pc]} ${MODESK[modeDeg]}<small>tie isté tóny ako ${keyName(current.t,current.mode)}${avoid.length?', pozor na '+avoid.map(p=>MAJPREF[p]).join(', ')+' — nedrž ho dlho':''}</small></td></tr>`;
+  });
+  h+='</table>';
+
+  const S=SCALES(current);
+  h+='<h2>Stupnice na hmatníku</h2><div class="scaleTabs">'+
+     S.map((s,i)=>`<button class="tab${i===scaleIdx?' sel':''}" data-s="${i}">${s.n}</button>`).join('')+'</div>';
+  const cur=S[Math.min(scaleIdx,S.length-1)];
+  h+=`<p style="margin:0 0 12px;color:var(--cream-dim);font-size:14px">${cur.d}</p>`;
+  h+=`<div class="fbwrap">${fretboard(cur.root,cur.iv)}</div>`;
+  o.innerHTML=h;
+  o.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{scaleIdx=+b.dataset.s;render();});
+}
+
+$('go').onclick=()=>{readInput();render();};
+$('inp').addEventListener('input',()=>{readInput();render();});
+$('clr').onclick=()=>{$('inp').value='';chords=[];drawChips();$('hear').textContent='';render();};
+
+/* ============ mikrofón ============ */
+const TPL={maj:[0,4,7],min:[0,3,7],dom:[0,4,7,10],m7:[0,3,7,10],maj7:[0,4,7,11],dim:[0,3,6],sus:[0,5,7],pow:[0,7]};
+const SUF={maj:'',min:'m',dom:'7',m7:'m7',maj7:'maj7',dim:'dim',sus:'sus4',pow:'5'};
+let ac,an,stream,raf,hist=[],lastAdd='',cool=0;
+
+async function toggleMic(){
+  const b=$('mic');
+  if(stream){stop();return;}
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  }catch(e){$('hear').textContent='Mikrofón sa nepodarilo zapnúť. Skontroluj povolenie v prehliadači.';return;}
+  ac=new (window.AudioContext||window.webkitAudioContext)();
+  an=ac.createAnalyser();an.fftSize=16384;an.smoothingTimeConstant=0.6;
+  ac.createMediaStreamSource(stream).connect(an);
+  b.classList.add('on');$('micTxt').textContent='Počúvam — zastaviť';
+  hist=[];lastAdd='';loop();
+}
+function stop(){
+  cancelAnimationFrame(raf);
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  if(ac)ac.close();
+  stream=null;ac=null;
+  $('mic').classList.remove('on');$('micTxt').textContent='Zahrať do mikrofónu';
+  $('hear').textContent='';
+}
+function chroma(){
+  const n=an.frequencyBinCount,d=new Float32Array(n);an.getFloatFrequencyData(d);
+  const sr=ac.sampleRate,bw=sr/2/n,ch=new Array(12).fill(0);let tot=0;
+  for(let i=1;i<n;i++){
+    const f=i*bw; if(f<70||f>1800)continue;
+    const mag=Math.pow(10,d[i]/20); if(d[i]<-92)continue;
+    const midi=69+12*Math.log2(f/440), r=Math.round(midi);
+    if(Math.abs(midi-r)>0.28)continue;
+    const w=mag/(1+Math.max(0,(f-500)/900));
+    ch[((r%12)+12)%12]+=w;tot+=w;
+  }
+  if(tot<=0)return null;
+  const mx=Math.max(...ch); if(mx<=0)return null;
+  return {v:ch.map(x=>x/mx),energy:tot};
+}
+function match(c){
+  let best=null;
+  for(let r=0;r<12;r++) for(const q in TPL){
+    const t=new Array(12).fill(0);
+    TPL[q].forEach((iv,i)=>t[(r+iv)%12]=i===0?1:(i===1?.92:(i===2?.85:.7)));
+    let dot=0,na=0,nb=0;
+    for(let i=0;i<12;i++){dot+=c[i]*t[i];na+=c[i]*c[i];nb+=t[i]*t[i];}
+    const sim=dot/(Math.sqrt(na*nb)||1);
+    const bonus=q==='maj'||q==='min'?0.03:0;
+    if(!best||sim+bonus>best.s)best={s:sim+bonus,label:MAJPREF[r]+SUF[q]};
+  }
+  return best;
+}
+function loop(){
+  raf=requestAnimationFrame(loop);
+  const c=chroma();
+  if(!c||c.energy<0.00002){hist=[];$('hear').innerHTML='<i>ticho…</i>';return;}
+  const m=match(c.v);
+  if(!m||m.s<0.72){$('hear').innerHTML='<i>počujem niečo, ale nie je to čistý akord…</i>';return;}
+  hist.push(m.label); if(hist.length>14)hist.shift();
+  const cnt={};hist.forEach(x=>cnt[x]=(cnt[x]||0)+1);
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+  $('hear').innerHTML=`počujem <b>${m.label}</b>`;
+  const now=performance.now();
+  if(top[1]>=9&&top[0]!==lastAdd&&now>cool){
+    lastAdd=top[0];cool=now+900;hist=[];
+    $('inp').value=($('inp').value+' '+top[0]).trim();
+    readInput();render();
+    $('hear').innerHTML=`pridané <b>${top[0]}</b>`;
+  }
+}
+$('mic').onclick=toggleMic;
+window.addEventListener('pagehide',stop);
+render();
+</script>
+</body>
+</html>
